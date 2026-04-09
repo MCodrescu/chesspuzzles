@@ -1,0 +1,27 @@
+{
+  "name": "chesspuzzles",
+  "version": "1.0.0",
+  "description": "Practice positions from your chess games.",
+  "homepage": "https://github.com/MCodrescu/chesspuzzles#readme",
+  "bugs": {
+    "url": "https://github.com/MCodrescu/chesspuzzles/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MCodrescu/chesspuzzles.git"
+  },
+  "license": "ISC",
+  "author": "Marcus Codrescu",
+  "type": "commonjs",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node main.js"
+  },
+  "dependencies": {
+    "@chrisoakman/chessboardjs": "^1.0.0",
+    "chess.js": "^1.4.0",
+    "express": "^5.2.1",
+    "jquery": "^4.0.0"
+  }
+}
