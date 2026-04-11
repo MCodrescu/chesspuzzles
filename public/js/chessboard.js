@@ -6,7 +6,17 @@ var config = {
   onDrop: onDrop
 }
 
-var newLocation, oldLocation, source, piece, position, orientation, game_info, position_number, game_number, stockfishBestMove, legalMoves;
+var newLocation, oldLocation, source, piece, position, board_orientation, game_info, position_number, game_number, stockfishBestMove, legalMoves;
+
+var toastTriggerCorrect = document.getElementById('correctAnswerToastBtn')
+var toastLiveExample = document.getElementById('liveToast')
+var toastTriggerIncorrect = document.getElementById('incorrectAnswerToastBtn')
+var toastLiveWrong = document.getElementById('liveToastWrong')
+
+var toastBootstrapCorrect = bootstrap.Toast.getOrCreateInstance(toastLiveExample)
+var toastBootstrapIncorrect = bootstrap.Toast.getOrCreateInstance(toastLiveWrong)
+var incorrectToastBody = document.querySelector('#incorrectToastBody');
+
 
 function onDragMove(newLocation, oldLocation, source,
   piece, position, orientation) {
@@ -15,15 +25,39 @@ function onDragMove(newLocation, oldLocation, source,
   source = source;
   piece = piece;
   position = position;
-  orientation = orientation;
+  board_orientation = orientation;
 }
 
-// snapback black pieces when they are dropped
+// snapback black pieces when they are dropped to illegal squares
+// Dont start flow if the piece is dropped to the same square (i.e. no move)
+// Show toast message if move is correct or incorrect
 function onDrop(source, target) {
   console.log(`Move from ${source} to ${target}`);
-  if (!legalMoves.includes(`${source}-${target}`)) {
-    return 'snapback';
+  console.log(stockfishBestMove);
+  console.log(`${source}${target}`);
+
+  if (source != target) {
+    if (!legalMoves.includes(`${source}-${target}`)) {
+      return 'snapback';
+    } else {
+      if (stockfishBestMove.includes(`${source}${target}`)) {
+
+        toastBootstrapCorrect.show();
+      } else {
+        console.log('Incorrect Move');
+
+        if (board_orientation === 'white') {
+          incorrectToastBody.innerHTML = `Incorrect! Stockfish's Best Move: ${stockfishBestMove[1]}`;
+        } else {
+          incorrectToastBody.innerHTML = `Incorrect! Stockfish's Best Move: ${stockfishBestMove[3]}`;
+        }
+
+        toastBootstrapIncorrect.show();
+      }
+    }
   }
+
+
 }
 
 var board = Chessboard('board1', config);
@@ -38,6 +72,10 @@ loadGamesButton.addEventListener('click', function () {
   format = document.querySelector('#gameFormat').value;
   game_number = document.querySelector('#gameNumber').value;
 
+  // Clear old toasts
+  toastBootstrapCorrect.hide();
+  toastBootstrapIncorrect.hide();
+
   fetch(`/chesswebapi/player/${username}`)
     .then(response => response.json())
     .then(data => console.log('Player Profile', data))
@@ -49,7 +87,7 @@ loadGamesButton.addEventListener('click', function () {
 
       console.log('Player Games', data)
 
-      var orientation = data.games[game_number].white.username === `${username}` ? 'white' : 'black';
+      var board_orientation = data.games[game_number].white.username === `${username}` ? 'white' : 'black';
       var pgn = data.games[game_number].pgn;
       game_info = data
 
@@ -65,7 +103,7 @@ loadGamesButton.addEventListener('click', function () {
           console.log(`Position Number: ${position_number} / Total Moves: ${total_moves}`);
 
           position_number_is_even = position_number % 2 === 0;
-          if (orientation === 'black') {
+          if (board_orientation === 'black') {
             if (position_number_is_even)
               position_number = position_number - 1;
           } else {
@@ -75,10 +113,10 @@ loadGamesButton.addEventListener('click', function () {
           position_number_is_even = position_number % 2 === 0;
           player_to_move = position_number_is_even ? 'white' : 'black';
 
-          console.log(`Position number: ${position_number} / position_number_is_even: ${position_number_is_even} / Player to Move: ${player_to_move} / Board Orientation: ${orientation}`);
+          console.log(`Position number: ${position_number} / position_number_is_even: ${position_number_is_even} / Player to Move: ${player_to_move} / Board Orientation: ${board_orientation}`);
           console.log(`Move Coord: ${data.positions[position_number].coord}`)
 
-          board.orientation(orientation);
+          board.orientation(board_orientation);
           board.position(data.positions[position_number - 1].fen);
           setTimeout(() => {
             board.move(data.positions[position_number].coord);
@@ -109,7 +147,7 @@ loadGamesButton.addEventListener('click', function () {
             .then(response => response.json())
             .then(stockfishData => {
               console.log('Stockfish Best Move', stockfishData);
-              stockfishBestMove = stockfishData.bestmove;
+              stockfishBestMove = stockfishData.bestmove.split(" ");
             })
             .catch(err => console.error(err));
 
