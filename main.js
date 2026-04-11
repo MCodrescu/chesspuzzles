@@ -4,10 +4,12 @@ const ChessWebAPI = require('chess-web-api');
 const { Chess } = require('chess.js');
 const path = require('path');
 require('dotenv').config();
+const axios = require('axios');
 
 const app = express();
 const chessAPI = new ChessWebAPI();
 
+app.use(express.json());
 app.use(express.static(__dirname + '/public', { maxAge: 300000 }));
 app.use(express.static(__dirname, { maxAge: 300000 }));
 
@@ -77,4 +79,14 @@ app.get('/chesswebapi/gamefen/:username/:year/:month/:format/:gameuuid', (req, r
             res.status(500).json({ error: err });
         });
 
+});
+
+app.post('/stockfish/bestmove/', (req, res) => {
+    const url = 'https://stockfish.online/api/s/v2.php';
+
+    axios.get(url, { params: { fen: req.body.fen , depth: req.body.depth } })
+        .then(response => {
+            res.json(response.data);
+        })
+        .catch(err => res.status(500).json({ error: err }))
 });

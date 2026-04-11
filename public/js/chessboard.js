@@ -3,6 +3,7 @@ var config = {
   position: 'start',
   moveSpeed: 'slow'
 }
+var stockfishBestMove = '';
 
 var board = Chessboard('board1', config);
 
@@ -60,7 +61,20 @@ loadGamesButton.addEventListener('click', function () {
           setTimeout(() => {
             board.move(data.positions[position_number].coord);
           }, 1000);
-          
+
+          fetch(`/stockfish/bestmove/`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ fen: data.positions[position_number - 1].fen , depth: 10 })
+          })
+            .then(response => response.json())
+            .then(stockfishData => {
+              console.log('Stockfish Best Move', stockfishData);
+              stockfishBestMove = stockfishData.bestmove;
+            })
+            .catch(err => console.error(err));
 
           gameInfo.innerHTML = `
           Player To Move: ${player_to_move}<br>
