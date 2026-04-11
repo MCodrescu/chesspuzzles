@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@chrisoakman/chessboardjs": "^1.0.0",
+    "chess-web-api": "^1.2.0",
     "chess.js": "^1.4.0",
     "express": "^5.2.1",
     "jquery": "^4.0.0"
