@@ -17,7 +17,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node main.js",
-    "build": "babel src -d dist"
+    "build": "babel main.js -d dist"
   },
   "dependencies": {
     "@chrisoakman/chessboardjs": "^1.0.0",
