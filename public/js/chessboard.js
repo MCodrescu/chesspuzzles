@@ -1,9 +1,30 @@
 var config = {
   draggable: true,
   position: 'start',
-  moveSpeed: 'slow'
+  moveSpeed: 'slow',
+  onDragMove: onDragMove,
+  onDrop: onDrop
 }
-var stockfishBestMove = '';
+
+var newLocation, oldLocation, source, piece, position, orientation, game_info, position_number, game_number, stockfishBestMove, legalMoves;
+
+function onDragMove(newLocation, oldLocation, source,
+  piece, position, orientation) {
+  newLocation = newLocation;
+  oldLocation = oldLocation;
+  source = source;
+  piece = piece;
+  position = position;
+  orientation = orientation;
+}
+
+// snapback black pieces when they are dropped
+function onDrop(source, target) {
+  console.log(`Move from ${source} to ${target}`);
+  if (!legalMoves.includes(`${source}-${target}`)) {
+    return 'snapback';
+  }
+}
 
 var board = Chessboard('board1', config);
 
@@ -29,7 +50,8 @@ loadGamesButton.addEventListener('click', function () {
       console.log('Player Games', data)
 
       var orientation = data.games[game_number].white.username === `${username}` ? 'white' : 'black';
-      var game_info = data
+      var pgn = data.games[game_number].pgn;
+      game_info = data
 
       fetch(`/chesswebapi/gamefen/${username}/${year}/${month}/${format}/` + data.games[game_number].uuid)
         .then(response => response.json())
@@ -62,12 +84,27 @@ loadGamesButton.addEventListener('click', function () {
             board.move(data.positions[position_number].coord);
           }, 1000);
 
+          // Determine all legal moves available
+          fetch('/chesswebapi/legalmoves/', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ pgn: pgn, position_number: position_number })
+          })
+            .then(response => response.json())
+            .then(data => {
+              console.log('Legal Moves', data);
+              legalMoves = data.legalMoves;
+            })
+            .catch(err => console.error(err));
+
           fetch(`/stockfish/bestmove/`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ fen: data.positions[position_number - 1].fen , depth: 10 })
+            body: JSON.stringify({ fen: data.positions[position_number - 1].fen, depth: 10 })
           })
             .then(response => response.json())
             .then(stockfishData => {

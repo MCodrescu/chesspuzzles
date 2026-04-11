@@ -81,10 +81,31 @@ app.get('/chesswebapi/gamefen/:username/:year/:month/:format/:gameuuid', (req, r
 
 });
 
+app.post('/chesswebapi/legalmoves/', (req, res) => {
+    const chess = new Chess();
+
+    if (req.body.pgn) {
+        chess.loadPgn(req.body.pgn);
+        all_moves = chess.history();
+        chess.reset();
+
+        // Make moves up to the current position
+        for (let i = 0; i < req.body.position_number; i++) {
+            chess.move(all_moves[i]);
+        }
+
+    }
+
+    var movesVerbose = chess.moves({ verbose: true });
+    var coordMoves = movesVerbose.map(m => `${m.from}-${m.to}`);
+
+    res.json({ legalMoves: coordMoves });
+});
+
 app.post('/stockfish/bestmove/', (req, res) => {
     const url = 'https://stockfish.online/api/s/v2.php';
 
-    axios.get(url, { params: { fen: req.body.fen , depth: req.body.depth } })
+    axios.get(url, { params: { fen: req.body.fen, depth: req.body.depth } })
         .then(response => {
             res.json(response.data);
         })
