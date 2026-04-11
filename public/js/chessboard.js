@@ -56,15 +56,15 @@ function onDrop(source, target) {
       }
     }
   }
-
-
 }
 
+// Initialize chessboard
 var board = Chessboard('board1', config);
 
 loadGamesButton = document.querySelector('#loadGames');
 gameInfo = document.querySelector('#gameInfo');
 
+// Load a new puzzle
 loadGamesButton.addEventListener('click', function () {
   username = document.querySelector('#chessUsername').value;
   year = document.querySelector('#year').value;
@@ -76,11 +76,13 @@ loadGamesButton.addEventListener('click', function () {
   toastBootstrapCorrect.hide();
   toastBootstrapIncorrect.hide();
 
+  // Get basic player info
   fetch(`/chesswebapi/player/${username}`)
     .then(response => response.json())
     .then(data => console.log('Player Profile', data))
     .catch(err => console.error(err));
 
+  // Load recent games
   fetch(`/chesswebapi/player/games/${username}/${year}/${month}`)
     .then(response => response.json())
     .then(data => {
@@ -91,6 +93,8 @@ loadGamesButton.addEventListener('click', function () {
       var pgn = data.games[game_number].pgn;
       game_info = data
 
+      // Get the FEN list for the selected game
+      // Display a random position from the game
       fetch(`/chesswebapi/gamefen/${username}/${year}/${month}/${format}/` + data.games[game_number].uuid)
         .then(response => response.json())
         .then(data => {
@@ -137,6 +141,7 @@ loadGamesButton.addEventListener('click', function () {
             })
             .catch(err => console.error(err));
 
+          // Get Stockfish's best move for the position
           fetch(`/stockfish/bestmove/`, {
             method: 'POST',
             headers: {
@@ -147,10 +152,12 @@ loadGamesButton.addEventListener('click', function () {
             .then(response => response.json())
             .then(stockfishData => {
               console.log('Stockfish Best Move', stockfishData);
+              console.log('Stockfish Best Move SAN', stockfishData.bestmove);
               stockfishBestMove = stockfishData.bestmove.split(" ");
             })
             .catch(err => console.error(err));
 
+          // show game info
           gameInfo.innerHTML = `
           Player To Move: ${player_to_move}<br>
           Black Player: ${game_info.games[game_number].black.username} (${game_info.games[game_number].black.rating})<br>

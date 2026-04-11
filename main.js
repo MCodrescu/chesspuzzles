@@ -102,11 +102,23 @@ app.post('/chesswebapi/legalmoves/', (req, res) => {
     res.json({ legalMoves: coordMoves });
 });
 
+// Convert between SAN and coordinate notation
+function coordToSan(fen, coord) {
+  var from = coord.slice(0,2);
+  var to = coord.slice(2,4);
+  var clone = new Chess(fen);
+  var mv = clone.move({ from, to });
+  return mv ? mv.san : null;
+}
+
 app.post('/stockfish/bestmove/', (req, res) => {
     const url = 'https://stockfish.online/api/s/v2.php';
 
     axios.get(url, { params: { fen: req.body.fen, depth: req.body.depth } })
         .then(response => {
+            var bestmove = response.data.bestmove.split(" ");
+            //var bestMoveSANBlack = coordToSan(req.body.fen, bestmove[3]);
+            //var bestMoveSANWhite = coordToSan(req.body.fen, bestmove[1]);
             res.json(response.data);
         })
         .catch(err => res.status(500).json({ error: err }))
