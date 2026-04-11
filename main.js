@@ -8,8 +8,8 @@ require('dotenv').config();
 const app = express();
 const chessAPI = new ChessWebAPI();
 
-app.use(express.static(__dirname + '/public'));
-app.use(express.static(__dirname));
+app.use(express.static(__dirname + '/public', { maxAge: 300000 }));
+app.use(express.static(__dirname, { maxAge: 300000 }));
 
 const port = process.env.PORT;
 
