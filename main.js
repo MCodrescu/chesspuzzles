@@ -3,6 +3,7 @@ const express = require('express');
 const ChessWebAPI = require('chess-web-api');
 const { Chess } = require('chess.js');
 const path = require('path');
+require('dotenv').config();
 
 const app = express();
 const chessAPI = new ChessWebAPI();
