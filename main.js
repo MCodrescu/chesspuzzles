@@ -63,11 +63,12 @@ app.get('/chesswebapi/gamefen/:username/:year/:month/:format/:gameuuid', (req, r
 
             // Make each move and record FEN
             moves.forEach((move, index) => {
-                chess.move(move);
+                mv = chess.move(move);
                 fenPositions.push({
                     move: index + 1,
                     fen: chess.fen(),
-                    san: move
+                    san: move,
+                    coord: `${mv.from}-${mv.to}`
                 });
             });
 
