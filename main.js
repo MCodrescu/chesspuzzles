@@ -10,7 +10,7 @@ const chessAPI = new ChessWebAPI();
 app.use(express.static(__dirname + '/public'));
 app.use(express.static(__dirname));
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT;
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
