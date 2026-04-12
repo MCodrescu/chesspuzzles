@@ -2,7 +2,6 @@
 const express = require('express');
 const ChessWebAPI = require('chess-web-api');
 const { Chess } = require('chess.js');
-const path = require('path');
 require('dotenv').config();
 const axios = require('axios');
 
@@ -19,7 +18,7 @@ app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
 
-
+// Get basic player information based on username
 app.get('/chesswebapi/player/:username', (req, res) => {
     chessAPI.getPlayer(req.params.username)
         .then(function (response) {
@@ -29,6 +28,7 @@ app.get('/chesswebapi/player/:username', (req, res) => {
         });
 });
 
+// Get all games for a specific player, year, and month
 app.get('/chesswebapi/player/games/:username/:year/:month', (req, res) => {
     chessAPI.getPlayerCompleteMonthlyArchives(req.params.username, req.params.year, req.params.month)
         .then(function (response) {
@@ -38,6 +38,8 @@ app.get('/chesswebapi/player/games/:username/:year/:month', (req, res) => {
         });
 });
 
+// Get the FEN positions for every move 
+// for a specific game based on username, year, month, format, and game UUID
 app.get('/chesswebapi/gamefen/:username/:year/:month/:format/:gameuuid', (req, res) => {
     chessAPI.getPlayerCompleteMonthlyArchives(req.params.username, req.params.year, req.params.month)
         .then(function (response) {
@@ -81,6 +83,7 @@ app.get('/chesswebapi/gamefen/:username/:year/:month/:format/:gameuuid', (req, r
 
 });
 
+// Get legal moves for a given position based on the PGN and move number
 app.post('/chesswebapi/legalmoves/', (req, res) => {
     const chess = new Chess();
 
@@ -102,15 +105,21 @@ app.post('/chesswebapi/legalmoves/', (req, res) => {
     res.json({ legalMoves: coordMoves });
 });
 
-// Convert between SAN and coordinate notation
-function coordToSan(fen, coord) {
-  var from = coord.slice(0,2);
-  var to = coord.slice(2,4);
-  var clone = new Chess(fen);
-  var mv = clone.move({ from, to });
-  return mv ? mv.san : null;
-}
+// Convert coordinate move to SAN
+// Stockfish returns best move in coordinate format, but we want to display it in SAN format
+app.post('/chesswebapi/convertCoordtoSAN/', (req, res) => {
+    var from = req.body.coord.slice(0,2);
+    var to = req.body.coord.slice(2,4);
+    var chess = new Chess(req.body.fen);
+    var mv = chess.move({ from, to });
+    if (mv) {
+        res.json({ san: mv.san });
+    } else {
+        res.status(400).json({ error: 'Invalid Coordinate move' });
+    }
+});
 
+// Get the best move from Stockfish API based on the given FEN and depth
 app.post('/stockfish/bestmove/', (req, res) => {
     const url = 'https://stockfish.online/api/s/v2.php';
 

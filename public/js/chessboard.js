@@ -46,11 +46,7 @@ function onDrop(source, target) {
       } else {
         console.log('Incorrect Move');
 
-        if (board_orientation === 'white') {
-          incorrectToastBody.innerHTML = `Incorrect! Stockfish's Best Move: ${stockfishBestMove[1]}`;
-        } else {
-          incorrectToastBody.innerHTML = `Incorrect! Stockfish's Best Move: ${stockfishBestMove[3]}`;
-        }
+        incorrectToastBody.innerHTML = `Incorrect! Stockfish's Best Move: ${stockfishBestMove[4]}`
 
         toastBootstrapIncorrect.show();
       }
@@ -151,9 +147,26 @@ loadGamesButton.addEventListener('click', function () {
           })
             .then(response => response.json())
             .then(stockfishData => {
-              console.log('Stockfish Best Move', stockfishData);
-              console.log('Stockfish Best Move SAN', stockfishData.bestmove);
+              console.log('Stockfish Best Move Coord', stockfishData.bestmove);
               stockfishBestMove = stockfishData.bestmove.split(" ");
+
+              // Convert Stockfish's best move from coordinate format to SAN format for display in the toast message
+              fetch('/chesswebapi/convertCoordtoSAN/', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  coord: stockfishBestMove[3],
+                  fen: data.positions[position_number].fen
+                })
+              })
+                .then(response => response.json())
+                .then(sanData => {
+                  stockfishBestMove.push(sanData.san);
+                })
+                .catch(err => console.error(err));
+
             })
             .catch(err => console.error(err));
 
