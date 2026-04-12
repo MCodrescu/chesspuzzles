@@ -20,20 +20,11 @@
 
 </head>
 
-<body>
-    <div class="container text-center">
-        <div class="row pb-3">
-            <div class="col">
-                <div class="h2">
-                    Chess Puzzles
-                </div>
-            </div>
-
-        </div>
-    </div>
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-4">
+<body class="bg-light bg-gradient">
+    <div class="container pt-5">
+        <div class="row">
+            <div class="col-3 bg-white rounded-5 p-4 shadow">
+                <p class = "fs-4 fw-bold">Game Details</p>
                 <form>
                     <div class="mb-3">
                         <label for="chessUsername" class="form-label">Username</label>
@@ -63,20 +54,36 @@
                     <p class="pt-3" id="gameInfo"></p>
                 </form>
             </div>
-            <div class="col-8">
-                <div id="board1" style="width: 60%"></div>
+            <div class="col-9">
+                <div class="container text-center">
+                    <div class="row pb-3">
+                        <div class="col">
+                            <div class="h1 fw-bold">
+                                Chess Puzzles
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row justify-content-center">
+                        <div class="col-8 bg-white rounded-5 p-4 shadow">
+                            <div id="board1" style="width: 100%"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
+
     <!-- Toast for correct answer -->
     <button type="button" class="btn btn-primary" id="correctAnswerToastBtn" style="display: none;"></button>
 
-    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <!-- Toast for incorrect answer -->
+    <button type="button" class="btn btn-p" id="incorrectAnswerToastBtn" style="display: none;"></button>
+
+    <div class="toast-container position-fixed top-0 end-0 p-3">
         <div id="liveToast" class="toast" role="alert" aria-live="assertive" data-bs-autohide="false"
             aria-atomic="true">
-            <div class="toast-header">
-                <img src="..." class="rounded me-2" alt="...">
+            <div class="toast-header bg-success text-white">
                 <strong class="me-auto">Answer</strong>
                 <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
@@ -84,16 +91,10 @@
                 Correct!
             </div>
         </div>
-    </div>
 
-    <!-- Toast for incorrect answer -->
-    <button type="button" class="btn btn-primary" id="incorrectAnswerToastBtn" style="display: none;"></button>
-
-    <div class="toast-container position-fixed bottom-0 end-0 p-3">
         <div id="liveToastWrong" class="toast" role="alert" data-bs-autohide="false" aria-live="assertive"
             aria-atomic="true">
-            <div class="toast-header">
-                <img src="..." class="rounded me-2" alt="...">
+            <div class="toast-header bg-warning">
                 <strong class="me-auto">Answer</strong>
                 <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
@@ -103,6 +104,9 @@
             <div></div>
         </div>
     </div>
+
+
+
     <script src="js/chessboard.js"></script>
 </body>
 
