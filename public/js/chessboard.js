@@ -98,8 +98,6 @@ loadGamesButton.addEventListener('click', function () {
       console.log('Player Games', data)
 
       var board_orientation = data.games[game_number].white.username === `${username}` ? 'white' : 'black';
-      var pgn = data.games[game_number].pgn;
-      var game_info = data
 
       // Get the FEN list for the selected game
       // Display a random position from the game
@@ -173,10 +171,7 @@ loadGamesButton.addEventListener('click', function () {
 
           // show game info
           gameInfo.innerHTML = `
-          ${board_orientation === 'white' ? 'White to Move' : 'Black to Move'}<br>
-          White Player: ${game_info.games[game_number].white.username} (${game_info.games[game_number].white.rating})<br>
-          Black Player: ${game_info.games[game_number].black.username} (${game_info.games[game_number].black.rating})<br>
-          Time Class: ${game_info.games[game_number].time_class}<br>
+          <strong>${board_orientation === 'white' ? 'White to Move' : 'Black to Move'}</strong><br>
           Last Move: ${data.positions[position_number].san}
           `;
 
