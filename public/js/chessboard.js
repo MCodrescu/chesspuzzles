@@ -146,6 +146,7 @@ loadGamesButton.addEventListener('click', function () {
           })
             .then(response => response.json())
             .then(stockfishData => {
+              console.log('Stockfish Data', stockfishData);
               console.log('Stockfish Best Move Coord', stockfishData.bestmove);
               stockfishBestMove = stockfishData.bestmove.split(" ");
 
@@ -166,6 +167,25 @@ loadGamesButton.addEventListener('click', function () {
                 })
                 .catch(err => console.error(err));
 
+            })
+            .catch(err => console.error(err));
+
+          // How much does the evaluation change if the best move is played?
+          // This helps determine the puzzle difficulty
+          fetch('/stockfish/evaluationChange/', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              fen: data.positions[position_number].fen,
+              depth: 15,
+              orientation: board_orientation
+            })
+          })
+            .then(response => response.json())
+            .then(evaluationData => {
+              console.log('Evaluation Change', evaluationData);
             })
             .catch(err => console.error(err));
 

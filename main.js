@@ -86,10 +86,13 @@ app.get('/chesswebapi/gamefen/:username/:year/:month/:format/:gameuuid', (req, r
 // Convert coordinate move to SAN
 // Stockfish returns best move in coordinate format, but we want to display it in SAN format
 app.post('/chesswebapi/convertCoordtoSAN/', (req, res) => {
-    var from = req.body.coord.slice(0, 2);
-    var to = req.body.coord.slice(2, 4);
     var chess = new Chess(req.body.fen);
-    var mv = chess.move({ from, to });
+    try{
+        var mv = chess.move(req.body.coord);
+    } catch (err) {
+        res.status(400).json({ error: 'Invalid Coordinate move format', details: err.toString() });
+        return;
+    }
     if (mv) {
         res.json({ san: mv.san });
     } else {
@@ -104,6 +107,39 @@ app.post('/stockfish/bestmove/', (req, res) => {
     axios.get(url, { params: { fen: req.body.fen, depth: req.body.depth } })
         .then(response => {
             res.json(response.data);
+        })
+        .catch(err => res.status(500).json({ error: err }))
+});
+
+// Get the change in evaluation based on the best move line
+app.post('/stockfish/evaluationChange/', (req, res) => {
+    const url = 'https://stockfish.online/api/s/v2.php';
+
+    var chessEval = new Chess(req.body.fen);
+
+    axios.get(url, { params: { fen: req.body.fen, depth: req.body.depth } })
+        .then(response => {
+            var current_eval = response.data.evaluation;
+            var bestline = response.data.continuation.split(" ");
+
+            for (let i = 0; i < bestline.length; i++) {
+                var mv = chessEval.move(bestline[i]);
+                if (!mv) {
+                    res.status(400).json({ error: 'Invalid Coordinate move in Stockfish best line' });
+                    return;
+                }
+            }
+
+            axios.get(url, { params: { fen: chessEval.fen(), depth: req.body.depth } })
+                .then(response => {
+                    var eval_after_continuation = response.data.evaluation;
+                    var eval_change = req.body.orientation === 'white' ? eval_after_continuation - current_eval : current_eval - eval_after_continuation;
+                    console.log('Current Eval:', current_eval);
+                    console.log('Eval After Continuation:', eval_after_continuation);
+                    console.log('Eval Change:', eval_change);
+                    res.json({ eval_change: eval_change });
+                })
+                .catch(err => res.status(500).json({ error: err }))
         })
         .catch(err => res.status(500).json({ error: err }))
 });
