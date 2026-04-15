@@ -83,28 +83,6 @@ app.get('/chesswebapi/gamefen/:username/:year/:month/:format/:gameuuid', (req, r
 
 });
 
-// Get legal moves for a given position based on the PGN and move number
-app.post('/chesswebapi/legalmoves/', (req, res) => {
-    const chess = new Chess();
-
-    if (req.body.pgn) {
-        chess.loadPgn(req.body.pgn);
-        all_moves = chess.history();
-        chess.reset();
-
-        // Make moves up to the current position
-        for (let i = 0; i < req.body.position_number; i++) {
-            chess.move(all_moves[i]);
-        }
-
-    }
-
-    var movesVerbose = chess.moves({ verbose: true });
-    var coordMoves = movesVerbose.map(m => `${m.from}-${m.to}`);
-
-    res.json({ legalMoves: coordMoves });
-});
-
 // Convert coordinate move to SAN
 // Stockfish returns best move in coordinate format, but we want to display it in SAN format
 app.post('/chesswebapi/convertCoordtoSAN/', (req, res) => {
@@ -125,40 +103,7 @@ app.post('/stockfish/bestmove/', (req, res) => {
 
     axios.get(url, { params: { fen: req.body.fen, depth: req.body.depth } })
         .then(response => {
-            var bestmove = response.data.bestmove.split(" ");
-            //var bestMoveSANBlack = coordToSan(req.body.fen, bestmove[3]);
-            //var bestMoveSANWhite = coordToSan(req.body.fen, bestmove[1]);
             res.json(response.data);
         })
         .catch(err => res.status(500).json({ error: err }))
-});
-
-// Get the new position after the last move
-// This solves castling, en passent, and promotion
-app.post('/chesswebapi/newposition/', (req, res) => {
-    var chess = new Chess();
-
-    if (req.body.pgn) {
-        chess.loadPgn(req.body.pgn);
-        all_moves = chess.history();
-        chess.reset();
-
-        // Make moves up to the current position
-        for (let i = 0; i < req.body.position_number; i++) {
-            chess.move(all_moves[i]);
-        }
-
-        // Make the move that was just played
-        var from = req.body.coord.slice(0, 2);
-        var to = req.body.coord.slice(2, 4);
-        var move = chess.move({ from, to });
-
-        if (move) {
-            res.json({ fen: chess.fen(), san: move.san });
-        } else {
-            res.status(400).json({ error: 'Invalid Move' });
-        }
-
-    }
-
 });
