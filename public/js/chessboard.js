@@ -142,7 +142,7 @@ loadGamesButton.addEventListener('click', function () {
             headers: {
               'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ fen: data.positions[position_number - 1].fen, depth: 15 })
+            body: JSON.stringify({ fen: data.positions[position_number].fen, depth: 15 })
           })
             .then(response => response.json())
             .then(stockfishData => {
@@ -158,7 +158,7 @@ loadGamesButton.addEventListener('click', function () {
                 },
                 body: JSON.stringify({
                   coord: stockfishBestMove[3],
-                  fen: data.positions[position_number].fen
+                  fen: data.positions[position_number - 1].fen
                 })
               })
                 .then(response => response.json())

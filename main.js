@@ -3,7 +3,7 @@ const express = require('express');
 const ChessWebAPI = require('chess-web-api');
 const { Chess } = require('chess.js');
 require('dotenv').config();
-const axios = require('axios');
+const { getStockfishBestMove } = require('./engine');
 
 const app = express();
 const chessAPI = new ChessWebAPI();
@@ -45,9 +45,14 @@ app.get('/chesswebapi/gamefen/:username/:year/:month/:format/:gameuuid', (req, r
         .then(function (response) {
 
             // Find the game with the specified UUID and format, then extract its PGN
-            pgn = response.body.games.find(
-                game => game.uuid === req.params.gameuuid && game.time_class === req.params.format
-            ).pgn;
+            var pgn;
+            try {
+                pgn = response.body.games.find(
+                    game => game.uuid === req.params.gameuuid && game.time_class === req.params.format
+                ).pgn;
+            } catch {
+                return;
+            }
 
             const chess = new Chess();
             chess.loadPgn(pgn);
@@ -87,7 +92,7 @@ app.get('/chesswebapi/gamefen/:username/:year/:month/:format/:gameuuid', (req, r
 // Stockfish returns best move in coordinate format, but we want to display it in SAN format
 app.post('/chesswebapi/convertCoordtoSAN/', (req, res) => {
     var chess = new Chess(req.body.fen);
-    try{
+    try {
         var mv = chess.move(req.body.coord);
     } catch (err) {
         res.status(400).json({ error: 'Invalid Coordinate move format', details: err.toString() });
@@ -102,44 +107,61 @@ app.post('/chesswebapi/convertCoordtoSAN/', (req, res) => {
 
 // Get the best move from Stockfish API based on the given FEN and depth
 app.post('/stockfish/bestmove/', (req, res) => {
-    const url = 'https://stockfish.online/api/s/v2.php';
 
-    axios.get(url, { params: { fen: req.body.fen, depth: req.body.depth } })
-        .then(response => {
-            res.json(response.data);
-        })
-        .catch(err => res.status(500).json({ error: err }))
+    try {
+        var result = getStockfishBestMove(req.body.fen, req.body.depth)
+        result.then((data) => { res.json(data) });
+    } catch (err) {
+        res.status(500).json({ error: err.toString() });
+    }
+
 });
 
-// Get the change in evaluation based on the best move line
-app.post('/stockfish/evaluationChange/', (req, res) => {
-    const url = 'https://stockfish.online/api/s/v2.php';
+app.post('/stockfish/evaluationChange/', async (req, res) => {
+    try {
+        const fen = req.body.fen;
+        const depth = req.body.depth;
+        const orientation = req.body.orientation;
 
-    var chessEval = new Chess(req.body.fen);
+        console.log("FEN for eval change calc ", fen);
 
-    axios.get(url, { params: { fen: req.body.fen, depth: req.body.depth } })
-        .then(response => {
-            var current_eval = response.data.evaluation;
-            var bestline = response.data.continuation.split(" ");
+        var result = getStockfishBestMove(req.body.fen, req.body.depth)
+        result.then((data) => {
+            if (data.mate){
+                var response = data.mate
+                return res.json({ response });
+            }
+
+            const current_eval = data.evaluation;
+            const bestline = data.continuation;
+            const chessEval = new Chess(fen);
+
+            console.log("Eval Change calc bestline ", bestline);
 
             for (let i = 0; i < bestline.length; i++) {
                 var mv = chessEval.move(bestline[i]);
                 if (!mv) {
-                    res.status(400).json({ error: 'Invalid Coordinate move in Stockfish best line' });
-                    return;
+                    return res.status(400).json({ error: 'Invalid Coordinate move in Stockfish best line' });
                 }
             }
 
-            axios.get(url, { params: { fen: chessEval.fen(), depth: req.body.depth } })
-                .then(response => {
-                    var eval_after_continuation = response.data.evaluation;
-                    var eval_change = req.body.orientation === 'white' ? eval_after_continuation - current_eval : current_eval - eval_after_continuation;
-                    console.log('Current Eval:', current_eval);
-                    console.log('Eval After Continuation:', eval_after_continuation);
-                    console.log('Eval Change:', eval_change);
-                    res.json({ eval_change: eval_change });
-                })
-                .catch(err => res.status(500).json({ error: err }))
-        })
-        .catch(err => res.status(500).json({ error: err }))
+            const nextFen = chessEval.fen();
+            console.log("FEN After Best Moves ", nextFen)
+            const after = getStockfishBestMove(nextFen, depth);
+            after.then((data) => {
+                const eval_after_continuation = data.evaluation;
+
+                const eval_change = orientation === 'white'
+                    ? eval_after_continuation - current_eval
+                    : current_eval - eval_after_continuation;
+
+
+                res.json({ eval_change });
+            })
+
+        });
+
+    } catch (err) {
+        res.status(500).json({ error: err.toString() });
+    }
 });
