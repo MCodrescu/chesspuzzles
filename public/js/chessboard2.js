@@ -12,10 +12,13 @@ const chess = new Chess();
 // Toast Configuration
 var toastLiveExample = document.getElementById('liveToast')
 var toastLiveWrong = document.getElementById('liveToastWrong')
+var toastInfo = document.getElementById('liveToastInfo')
 
 var toastBootstrapCorrect = bootstrap.Toast.getOrCreateInstance(toastLiveExample)
 var toastBootstrapIncorrect = bootstrap.Toast.getOrCreateInstance(toastLiveWrong)
+var toastBootstrapInfo = bootstrap.Toast.getOrCreateInstance(toastInfo)
 var incorrectToastBody = document.querySelector('#incorrectToastBody');
+var infoToastBody = document.querySelector('#infoToastBody');
 
 // Puzzle correct or incorrect toast message
 function showEngineBestMoveToast(source, target) {
@@ -67,7 +70,7 @@ function inputHandler(event) {
               chess.move({ from: event.squareFrom, to: event.squareTo, promotion: result.piece.charAt(1) })
               event.chessboard.setPosition(chess.fen(), true)
               showEngineBestMoveToast(event.squareFrom, event.squareTo)
-              
+
             } else {
               // promotion canceled
               event.chessboard.enableMoveInput(inputHandler, COLOR.white)
@@ -158,7 +161,9 @@ loadGamesButton.addEventListener('click', function () {
           // Update the board and show the last move made before the position
           chess.load(data.positions[position_number - 1].fen);
           board.setOrientation(board_orientation);
-          board.enableMoveInput(inputHandler, board_orientation)
+          if (!board.isMoveInputEnabled()) {
+            board.enableMoveInput(inputHandler, board_orientation)
+          }
           board.setPosition(data.positions[position_number - 1].fen, true);
           setTimeout(() => {
             board.movePiece(data.positions[position_number].coord.slice(0, 2), data.positions[position_number].coord.slice(3, 5), true);
@@ -220,10 +225,11 @@ loadGamesButton.addEventListener('click', function () {
             .catch(err => console.error(err));
 
           // show game info
-          gameInfo.innerHTML = `
+          infoToastBody.innerHTML = `
           <strong>${board_orientation === COLOR.white ? 'White to Move' : 'Black to Move'}</strong><br>
           Last Move: ${data.positions[position_number].san}
           `;
+          toastBootstrapInfo.show();
 
         })
         .catch(err => console.error(err));

@@ -101,6 +101,9 @@
     <!-- Toast for incorrect answer -->
     <button type="button" class="btn btn-p" id="incorrectAnswerToastBtn" style="display: none;"></button>
 
+    <!-- Toast for info -->
+    <button type="button" class="btn btn-p" id="infoToastBtn" style="display: none;"></button>
+
     <div class="toast-container position-fixed bottom-0 end-0 p-3">
         <div id="liveToast" class="toast" role="alert" aria-live="assertive" data-bs-autohide="false"
             aria-atomic="true">
@@ -121,6 +124,14 @@
             </div>
             <div class="toast-body" id="incorrectToastBody">
                 Incorrect!
+            </div>
+            <div></div>
+        </div>
+
+        <div id="liveToastInfo" class="toast" role="alert" data-bs-autohide="false" aria-live="assertive"
+            aria-atomic="true">
+            <div class="toast-body" id="infoToastBody">
+                Info!
             </div>
             <div></div>
         </div>
