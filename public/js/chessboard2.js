@@ -8,6 +8,7 @@ import { RightClickAnnotator } from "../node_modules/cm-chessboard/src/extension
 // Initialize values
 var stockfishBestMove;
 const chess = new Chess();
+var lastMoveDetails = document.querySelector('#lastMoveDetails');
 
 // Toast Configuration
 var toastLiveExample = document.getElementById('liveToast')
@@ -166,8 +167,8 @@ loadGamesButton.addEventListener('click', function () {
           }
           board.setPosition(data.positions[position_number - 1].fen, true);
           setTimeout(() => {
-            board.movePiece(data.positions[position_number].coord.slice(0, 2), data.positions[position_number].coord.slice(3, 5), true);
             chess.move({ from: data.positions[position_number].coord.slice(0, 2), to: data.positions[position_number].coord.slice(3, 5) });
+            board.setPosition(chess.fen(), true);
           }, 1000);
 
 
@@ -225,11 +226,10 @@ loadGamesButton.addEventListener('click', function () {
             .catch(err => console.error(err));
 
           // show game info
-          infoToastBody.innerHTML = `
-          <strong>${board_orientation === COLOR.white ? 'White to Move' : 'Black to Move'}</strong><br>
+          lastMoveDetails.innerHTML = `
+          <strong>${board_orientation === COLOR.white ? 'White to Move' : 'Black to Move'}</strong>:
           Last Move: ${data.positions[position_number].san}
           `;
-          toastBootstrapInfo.show();
 
         })
         .catch(err => console.error(err));

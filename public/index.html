@@ -64,6 +64,7 @@
         </div>
     </div>
 
+    <!-- Main Container -->
     <div class="container pt-5">
         <div class="row justify-content-center">
             <div class="col-12 col-md-8">
@@ -80,6 +81,9 @@
                             <button class="btn btn-primary" type="button" id="loadGames">
                                 New Puzzle
                             </button>
+                            <div class = "pt-3" id = "lastMoveDetails">
+                                Generate a new puzzle.
+                            </div>
                         </div>
                     </div>
                     <div class="row justify-content-center">
@@ -130,6 +134,9 @@
 
         <div id="liveToastInfo" class="toast" role="alert" data-bs-autohide="false" aria-live="assertive"
             aria-atomic="true">
+            <div class="toast-header justify-content-start ms-0 ps-0">
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
             <div class="toast-body" id="infoToastBody">
                 Info!
             </div>
