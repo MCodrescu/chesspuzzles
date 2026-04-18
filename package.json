@@ -20,16 +20,13 @@
     "build": "babel main.js -d dist"
   },
   "dependencies": {
-    "@chrisoakman/chessboardjs": "^1.0.0",
-    "axios": "^1.15.0",
     "bootstrap": "^5.3.8",
     "chess-web-api": "^1.2.0",
     "chess.js": "^1.4.0",
     "cm-chessboard": "^8.12.7",
     "dotenv": "^17.4.1",
     "express": "^5.2.1",
-    "jquery": "^4.0.0",
-    "stockfish": "^18.0.7"
+    "jquery": "^4.0.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.28.6",

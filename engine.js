@@ -1,7 +1,52 @@
-const { spawn } = require('child_process');
-const engine = spawn('stockfish');
+function getStockfishBestMove(fen, depth) {
+    var fen = encodeURIComponent(fen);
+    var depth = depth;
+    var url = `https://stockfish.online/api/s/v2.php?fen=${fen}&depth=${depth}`;
 
-function getStockfishBestMove(fen, depth, timeoutMs = 5000) {
+    return new Promise((resolve, reject) => {
+        fetch(url, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json'
+            }
+        })
+            .then(res => {
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                return res.json();
+            })
+            .then(data => {
+                //console.log("Best Move by Stockfish ", data)
+                resolve ({ 
+                    bestmove: data.bestmove, 
+                    continuation: data.continuation.split(" "), 
+                    evaluation: data.evaluation, 
+                    mate: data.mate 
+                })
+            })
+            .catch(
+                err => {
+                    console.log(err);
+                    resolve ({ 
+                        bestmove: null, 
+                        continuation: null, 
+                        evaluation: null,
+                        mate: null
+                    })
+                }
+            );
+    })
+
+
+
+}
+
+module.exports = { getStockfishBestMove };
+
+
+//const { spawn } = require('child_process');
+//const engine = spawn('stockfish');
+
+/*function getStockfishBestMove(fen, depth, timeoutMs = 5000) {
     if (!engine || !engine.stdout) {
         return Promise.reject(new Error('Invalid engine: spawn Stockfish and pass the child process as "engine"'));
     }
@@ -54,7 +99,7 @@ function getStockfishBestMove(fen, depth, timeoutMs = 5000) {
             if (timedOut) return;
             cleanup();
             const lastLine = lines.length ? lines[lines.length - 1] : '';
-            resolve({ bestmove: lastLine, evaluation: lastInfoCp, continuation: lastInfoPv , mate: lastMate});
+            resolve({ bestmove: lastLine, evaluation: lastInfoCp, continuation: lastInfoPv, mate: lastMate });
         };
 
         const timer = setTimeout(() => {
@@ -90,6 +135,5 @@ function getStockfishBestMove(fen, depth, timeoutMs = 5000) {
             engine.stdin.write(`go depth ${depth}\n`);
         })().catch(err => { cleanup(); reject(err); });
     });
-}
+}*/
 
-module.exports = { getStockfishBestMove };
