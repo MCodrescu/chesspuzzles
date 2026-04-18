@@ -5,87 +5,230 @@ import { Accessibility } from "../node_modules/cm-chessboard/src/extensions/acce
 import { Chess } from "https://cdn.jsdelivr.net/npm/chess.mjs@1/src/chess.mjs/Chess.js"
 import { RightClickAnnotator } from "../node_modules/cm-chessboard/src/extensions/right-click-annotator/RightClickAnnotator.js";
 
-const chess = new Chess()
+// Initialize values
+var stockfishBestMove;
+const chess = new Chess();
 
-let seed = 71;
-function random() {
-    const x = Math.sin(seed++) * 10000;
-    return x - Math.floor(x);
-}
-function makeEngineMove(chessboard) {
-    const possibleMoves = chess.moves({ verbose: true })
-    if (possibleMoves.length > 0) {
-        const randomIndex = Math.floor(random() * possibleMoves.length)
-        const randomMove = possibleMoves[randomIndex]
-        setTimeout(() => { // smoother with 500ms delay
-            chess.move({ from: randomMove.from, to: randomMove.to })
-            chessboard.setPosition(chess.fen(), true)
-            chessboard.enableMoveInput(inputHandler, COLOR.white)
-        }, 500)
+// Toast Configuration
+var toastLiveExample = document.getElementById('liveToast')
+var toastLiveWrong = document.getElementById('liveToastWrong')
+
+var toastBootstrapCorrect = bootstrap.Toast.getOrCreateInstance(toastLiveExample)
+var toastBootstrapIncorrect = bootstrap.Toast.getOrCreateInstance(toastLiveWrong)
+var incorrectToastBody = document.querySelector('#incorrectToastBody');
+
+// Puzzle correct or incorrect toast message
+function showEngineBestMoveToast(source, target) {
+  if (stockfishBestMove.includes(`${source}${target}`)) {
+
+      toastBootstrapCorrect.show();
+    } else {
+      console.log('Incorrect Move');
+
+      incorrectToastBody.innerHTML = `Incorrect! Stockfish's Best Move: ${stockfishBestMove[4]}`
+
+      toastBootstrapIncorrect.show();
     }
 }
 
+// Define legal moves, promotions, and move validation for chessboard input
 function inputHandler(event) {
-    console.log("inputHandler", event)
-    if (event.type === INPUT_EVENT_TYPE.movingOverSquare) {
-        return // ignore this event
-    }
-    if (event.type !== INPUT_EVENT_TYPE.moveInputFinished) {
-        event.chessboard.removeLegalMovesMarkers()
-    }
-    if (event.type === INPUT_EVENT_TYPE.moveInputStarted) {
-        // mark legal moves
-        const moves = chess.moves({ square: event.squareFrom, verbose: true })
-        event.chessboard.addLegalMovesMarkers(moves)
-        return moves.length > 0
-    } else if (event.type === INPUT_EVENT_TYPE.validateMoveInput) {
-        const move = { from: event.squareFrom, to: event.squareTo, promotion: event.promotion }
-        const result = chess.move(move)
-        if (result) {
-            event.chessboard.state.moveInputProcess.then(() => { // wait for the move input process has finished
-                event.chessboard.setPosition(chess.fen(), true).then(() => { // update position, maybe castled and wait for animation has finished
-                    makeEngineMove(event.chessboard)
-                })
-            })
-        } else {
-            // promotion?
-            let possibleMoves = chess.moves({ square: event.squareFrom, verbose: true })
-            for (const possibleMove of possibleMoves) {
-                if (possibleMove.promotion && possibleMove.to === event.squareTo) {
-                    event.chessboard.showPromotionDialog(event.squareTo, COLOR.white, (result) => {
-                        console.log("promotion result", result)
-                        if (result.type === PROMOTION_DIALOG_RESULT_TYPE.pieceSelected) {
-                            chess.move({ from: event.squareFrom, to: event.squareTo, promotion: result.piece.charAt(1) })
-                            event.chessboard.setPosition(chess.fen(), true)
-                            makeEngineMove(event.chessboard)
-                        } else {
-                            // promotion canceled
-                            event.chessboard.enableMoveInput(inputHandler, COLOR.white)
-                            event.chessboard.setPosition(chess.fen(), true)
-                        }
-                    })
-                    return true
-                }
+  
+  if (event.type === INPUT_EVENT_TYPE.movingOverSquare) {
+    return // ignore this event
+  }
+  if (event.type !== INPUT_EVENT_TYPE.moveInputFinished) {
+    event.chessboard.removeLegalMovesMarkers()
+  }
+  if (event.type === INPUT_EVENT_TYPE.moveInputStarted) {
+    // mark legal moves
+    const moves = chess.moves({ square: event.squareFrom, verbose: true })
+    event.chessboard.addLegalMovesMarkers(moves)
+    return moves.length > 0
+
+  } else if (event.type === INPUT_EVENT_TYPE.validateMoveInput) {
+    const move = { from: event.squareFrom, to: event.squareTo, promotion: event.promotion }
+    const result = chess.move(move)
+
+    if (result) {
+      event.chessboard.state.moveInputProcess.then(() => { // wait for the move input process has finished
+        event.chessboard.setPosition(chess.fen(), true).then(() => { // update position, maybe castled and wait for animation has finished
+          showEngineBestMoveToast(event.squareFrom, event.squareTo)
+        })
+      })
+    } else {
+      // promotion?
+      let possibleMoves = chess.moves({ square: event.squareFrom, verbose: true })
+      for (const possibleMove of possibleMoves) {
+        if (possibleMove.promotion && possibleMove.to === event.squareTo) {
+          event.chessboard.showPromotionDialog(event.squareTo, COLOR.white, (result) => {
+            
+            if (result.type === PROMOTION_DIALOG_RESULT_TYPE.pieceSelected) {
+              chess.move({ from: event.squareFrom, to: event.squareTo, promotion: result.piece.charAt(1) })
+              event.chessboard.setPosition(chess.fen(), true)
+              showEngineBestMoveToast(event.squareFrom, event.squareTo)
+              
+            } else {
+              // promotion canceled
+              event.chessboard.enableMoveInput(inputHandler, COLOR.white)
+              event.chessboard.setPosition(chess.fen(), true)
             }
+          })
+          return true
         }
-        return result
-    } else if (event.type === INPUT_EVENT_TYPE.moveInputFinished) {
-        if (event.legalMove) {
-            event.chessboard.disableMoveInput()
-        }
+      }
     }
+    return result
+  } else if (event.type === INPUT_EVENT_TYPE.moveInputFinished) {
+    if (event.legalMove) {
+      event.chessboard.disableMoveInput()
+    }
+  }
 }
 
 const board = new Chessboard(document.getElementById("board"), {
-    position: chess.fen(),
-    assetsUrl: "../node_modules/cm-chessboard/assets/",
-    style: { borderType: BORDER_TYPE.none, pieces: { file: "pieces/staunty.svg" }, animationDuration: 300 },
-    orientation: COLOR.white,
-    extensions: [
-        { class: Markers, props: { autoMarkers: MARKER_TYPE.square } },
-        { class: RightClickAnnotator },
-        { class: PromotionDialog },
-        { class: Accessibility, props: { visuallyHidden: true } }
-    ]
+  position: chess.fen(),
+  assetsUrl: "../node_modules/cm-chessboard/assets/",
+  style: { borderType: BORDER_TYPE.none, pieces: { file: "pieces/staunty.svg" }, animationDuration: 300 },
+  extensions: [
+    { class: Markers, props: { autoMarkers: MARKER_TYPE.square } },
+    { class: RightClickAnnotator },
+    { class: PromotionDialog },
+    { class: Accessibility, props: { visuallyHidden: true } }
+  ]
 })
-board.enableMoveInput(inputHandler, COLOR.white)
+
+// Button Configuration 
+var loadGamesButton = document.querySelector('#loadGames');
+
+// Load a new puzzle
+loadGamesButton.addEventListener('click', function () {
+  var username = document.querySelector('#chessUsername').value;
+  var year = document.querySelector('#year').value;
+  var month = document.querySelector('#month').value;
+  var format = document.querySelector('#gameFormat').value;
+  var game_number = document.querySelector('#gameNumber').value;
+
+  // Clear old toasts
+  toastBootstrapCorrect.hide();
+  toastBootstrapIncorrect.hide();
+
+  // Get basic player info
+  fetch(`/chesswebapi/player/${username}`)
+    .then(response => response.json())
+    .then(data => console.log('Player Profile', data))
+    .catch(err => console.error(err));
+
+  // Load recent games
+  fetch(`/chesswebapi/player/games/${username}/${year}/${month}`)
+    .then(response => response.json())
+    .then(data => {
+
+      console.log('Player Games', data)
+
+      var board_orientation = data.games[game_number].white.username === `${username}` ? COLOR.white : COLOR.black;
+
+      // Get the FEN list for the selected game
+      // Display a random position from the game
+      fetch(`/chesswebapi/gamefen/${username}/${year}/${month}/${format}/` + data.games[game_number].uuid)
+        .then(response => response.json())
+        .then(data => {
+          console.log('Game FENs', data)
+
+          var total_moves = data.positions.length - 1;
+          var position_number = Math.random() * total_moves;
+          var position_number = Math.ceil(position_number);
+
+          console.log(`Position Number: ${position_number} / Total Moves: ${total_moves}`);
+
+          position_number_is_even = position_number % 2 === 0;
+          if (board_orientation === COLOR.black) {
+            if (position_number_is_even)
+              position_number = position_number - 1;
+          } else {
+            if (!position_number_is_even)
+              position_number = position_number - 1;
+          }
+          var position_number_is_even = position_number % 2 === 0;
+          var player_to_move = position_number_is_even ? 'white' : 'black';
+
+          console.log(`Position number: ${position_number} / position_number_is_even: ${position_number_is_even} / Player to Move: ${player_to_move} / Board Orientation: ${board_orientation}`);
+          console.log(`Move Coord: ${data.positions[position_number].coord}`)
+
+          // Update the board and show the last move made before the position
+          chess.load(data.positions[position_number - 1].fen);
+          board.setOrientation(board_orientation);
+          board.enableMoveInput(inputHandler, board_orientation)
+          board.setPosition(data.positions[position_number - 1].fen, true);
+          setTimeout(() => {
+            board.movePiece(data.positions[position_number].coord.slice(0, 2), data.positions[position_number].coord.slice(3, 5), true);
+            chess.move({ from: data.positions[position_number].coord.slice(0, 2), to: data.positions[position_number].coord.slice(3, 5) });
+          }, 1000);
+
+
+          // Get Stockfish's best move for the position
+          fetch(`/stockfish/bestmove/`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ fen: data.positions[position_number - 1].fen, depth: 15 })
+          })
+            .then(response => response.json())
+            .then(stockfishData => {
+              console.log('Stockfish Data', stockfishData);
+              console.log('Stockfish Best Move Coord', stockfishData.bestmove);
+              stockfishBestMove = stockfishData.bestmove.split(" ");
+
+              // Convert Stockfish's best move from coordinate format to SAN format for display in the toast message
+              fetch('/chesswebapi/convertCoordtoSAN/', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  coord: stockfishBestMove[3],
+                  fen: data.positions[position_number].fen
+                })
+              })
+                .then(response => response.json())
+                .then(sanData => {
+                  stockfishBestMove.push(sanData.san);
+                })
+                .catch(err => console.error(err));
+
+            })
+            .catch(err => console.error(err));
+
+          // How much does the evaluation change if the best move is played?
+          // This helps determine the puzzle difficulty
+          fetch('/stockfish/evaluationChange/', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              fen: data.positions[position_number].fen,
+              depth: 15,
+              orientation: board_orientation
+            })
+          })
+            .then(response => response.json())
+            .then(evaluationData => {
+              console.log('Evaluation Change', evaluationData);
+            })
+            .catch(err => console.error(err));
+
+          // show game info
+          gameInfo.innerHTML = `
+          <strong>${board_orientation === COLOR.white ? 'White to Move' : 'Black to Move'}</strong><br>
+          Last Move: ${data.positions[position_number].san}
+          `;
+
+        })
+        .catch(err => console.error(err));
+
+    })
+    .catch(err => console.error(err));
+
+})
