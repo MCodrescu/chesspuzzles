@@ -134,16 +134,23 @@ loadGamesButton.addEventListener('click', function () {
 
       // Get the FEN list for the selected game
       // Display a random position from the game
-      fetch(`/chesswebapi/gamefen/${username}/${year}/${month}/${format}/` + data.games[game_number].uuid)
+      fetch('/stockfish/topTenPositions/', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ gameId: data.games[game_number].uuid, username: username })
+          })
         .then(response => response.json())
         .then(data => {
           console.log('Game FENs', data)
 
-          var total_moves = data.positions.length - 1;
-          var position_number = Math.random() * total_moves;
-          var position_number = Math.ceil(position_number);
+          //var total_moves = data.positions.length - 1;
+          var topGame = data.topGames[0].top_position[0]
+          //var position_number = Math.random() * total_moves;
+          var position_number = topGame.move;
 
-          console.log(`Position Number: ${position_number} / Total Moves: ${total_moves}`);
+          //console.log(`Position Number: ${position_number} / Total Moves: ${total_moves}`);
 
           position_number_is_even = position_number % 2 === 0;
           if (board_orientation === COLOR.black) {
@@ -157,17 +164,17 @@ loadGamesButton.addEventListener('click', function () {
           var player_to_move = position_number_is_even ? 'white' : 'black';
 
           console.log(`Position number: ${position_number} / position_number_is_even: ${position_number_is_even} / Player to Move: ${player_to_move} / Board Orientation: ${board_orientation}`);
-          console.log(`Move Coord: ${data.positions[position_number].coord}`)
+          //console.log(`Move Coord: ${data.positions[position_number].coord}`)
 
           // Update the board and show the last move made before the position
-          chess.load(data.positions[position_number - 1].fen);
+          chess.load(topGame.fen_before);
           board.setOrientation(board_orientation);
           if (!board.isMoveInputEnabled()) {
             board.enableMoveInput(inputHandler, board_orientation)
           }
-          board.setPosition(data.positions[position_number - 1].fen, true);
+          board.setPosition(topGame.fen_before, true);
           setTimeout(() => {
-            chess.move({ from: data.positions[position_number].coord.slice(0, 2), to: data.positions[position_number].coord.slice(3, 5) });
+            chess.move({ from: topGame.coord.slice(0, 2), to: topGame.coord.slice(3, 5) });
             board.setPosition(chess.fen(), true);
           }, 1000);
 
@@ -178,7 +185,7 @@ loadGamesButton.addEventListener('click', function () {
             headers: {
               'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ fen: data.positions[position_number].fen, depth: 15 })
+            body: JSON.stringify({ fen: topGame.fen, depth: 15 })
           })
             .then(response => response.json())
             .then(stockfishData => {
@@ -194,7 +201,7 @@ loadGamesButton.addEventListener('click', function () {
                 },
                 body: JSON.stringify({
                   coord: stockfishBestMove[1],
-                  fen: data.positions[position_number].fen
+                  fen: topGame.fen
                 })
               })
                 .then(response => response.json())
@@ -206,29 +213,10 @@ loadGamesButton.addEventListener('click', function () {
             })
             .catch(err => console.error(err));
 
-          // How much does the evaluation change if the best move is played?
-          // This helps determine the puzzle difficulty
-          fetch('/stockfish/evaluationChange/', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              fen: data.positions[position_number].fen,
-              depth: 15,
-              orientation: board_orientation
-            })
-          })
-            .then(response => response.json())
-            .then(evaluationData => {
-              console.log('Evaluation Change', evaluationData);
-            })
-            .catch(err => console.error(err));
-
           // show game info
           lastMoveDetails.innerHTML = `
           <strong>${board_orientation === COLOR.white ? 'White to Move' : 'Black to Move'}</strong>:
-          Last Move: ${data.positions[position_number].san}
+          Last Move: ${topGame.san}
           `;
 
         })

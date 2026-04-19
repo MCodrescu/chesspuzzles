@@ -35,18 +35,12 @@ function getStockfishBestMove(fen, depth) {
                 }
             );
     })
-
-
-
 }
 
-module.exports = { getStockfishBestMove };
+const { spawn } = require('child_process');
+const engine = spawn('stockfish');
 
-
-//const { spawn } = require('child_process');
-//const engine = spawn('stockfish');
-
-/*function getStockfishBestMove(fen, depth, timeoutMs = 5000) {
+function getStockfishBestMove(fen, depth, timeoutMs = 5000) {
     if (!engine || !engine.stdout) {
         return Promise.reject(new Error('Invalid engine: spawn Stockfish and pass the child process as "engine"'));
     }
@@ -135,5 +129,6 @@ module.exports = { getStockfishBestMove };
             engine.stdin.write(`go depth ${depth}\n`);
         })().catch(err => { cleanup(); reject(err); });
     });
-}*/
+}
 
+module.exports = { getStockfishBestMove };
