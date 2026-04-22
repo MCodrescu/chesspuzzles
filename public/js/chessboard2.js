@@ -318,19 +318,8 @@ async function loadNextPuzzle() {
     var position_number = topGame.move;
     stockfishBestMoveCoord = topGame.bestline.slice(0, 4)[0];
 
-    position_number_is_even = position_number % 2 === 0;
-    if (board_orientation === COLOR.black) {
-      if (position_number_is_even)
-        position_number = position_number - 1;
-    } else {
-      if (!position_number_is_even)
-        position_number = position_number - 1;
-    }
-    var position_number_is_even = position_number % 2 === 0;
-
     // Update the board and show the last move made before the position
     chess.load(topGame.fen_before);
-    board.setOrientation(board_orientation);
     if (!board.isMoveInputEnabled()) {
       board.enableMoveInput(inputHandler, board_orientation)
     }
@@ -342,6 +331,13 @@ async function loadNextPuzzle() {
 
     // Convert Stockfish's best move from coordinate format to SAN format for display in the toast message
     stockfishBestMoveSAN = await convertCoordToSan(stockfishBestMoveCoord, topGame.fen);
+
+    // show game info
+    lastMoveDetails.innerHTML = `
+        <strong>${board_orientation === COLOR.white ? 'White to Move' : 'Black to Move'}</strong>:
+        Last Move: ${topGame.san}
+      `;
+
   } catch (error) {
     console.log("Error in loadNextPuzzle: ", error)
   }
@@ -350,6 +346,4 @@ async function loadNextPuzzle() {
 // Load Next Puzzle
 nextPuzzleButton.addEventListener('click', () => {
   loadNextPuzzle();
-
-
 })
