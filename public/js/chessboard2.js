@@ -12,8 +12,8 @@ var top_positions;
 const chess = new Chess();
 var lastMoveDetails = document.querySelector('#lastMoveDetails');
 var puzzle_number = 0;
-var topGamesData;
 var board_orientation;
+var topGame;
 
 // Toast Configuration
 var toastLiveExample = document.getElementById('liveToast')
@@ -28,8 +28,6 @@ var infoToastBody = document.querySelector('#infoToastBody');
 
 // Puzzle correct or incorrect toast message
 function showEngineBestMoveToast(source, target) {
-  console.log(stockfishBestMoveCoord);
-  console.log(stockfishBestMoveSAN);
   if (stockfishBestMoveCoord == `${source}${target}`) {
     toastBootstrapCorrect.show();
   } else {
@@ -96,7 +94,7 @@ function inputHandler(event) {
 const board = new Chessboard(document.getElementById("board"), {
   position: chess.fen(),
   assetsUrl: "../node_modules/cm-chessboard/assets/",
-  style: { borderType: BORDER_TYPE.none, pieces: { file: "pieces/staunty.svg" }, animationDuration: 300 },
+  style: { borderType: BORDER_TYPE.none, pieces: { file: "pieces/staunty.svg" }, animationDuration: 1000 },
   extensions: [
     { class: Markers, props: { autoMarkers: MARKER_TYPE.square } },
     { class: RightClickAnnotator },
@@ -247,26 +245,12 @@ async function loadGames() {
     var playerGames = await getPlayerGames(username, year, month);
 
     // Get the correct board orientation.
-    var board_orientation = playerGames.games[game_number].white.username === `${username}` ? COLOR.white : COLOR.black;
+    board_orientation = playerGames.games[game_number].white.username === `${username}` ? COLOR.white : COLOR.black;
 
     // Load top ten positions from that game
     top_positions = await getTopTenGamePositions(playerGames.games[game_number].uuid, username);
     toastBootstrapInfo.hide();
-    var topGame = top_positions.top_position[puzzle_number]
-    var position_number = topGame.move;
-
-    position_number_is_even = position_number % 2 === 0;
-    if (board_orientation === COLOR.black) {
-      if (position_number_is_even)
-        position_number = position_number - 1;
-    } else {
-      if (!position_number_is_even)
-        position_number = position_number - 1;
-    }
-    var position_number_is_even = position_number % 2 === 0;
-    var player_to_move = position_number_is_even ? 'white' : 'black';
-
-    console.log(`Position number: ${position_number} / position_number_is_even: ${position_number_is_even} / Player to Move: ${player_to_move} / Board Orientation: ${board_orientation}`);
+    topGame = top_positions.top_position[puzzle_number]
 
     // Update the board and show the last move made before the position
     chess.load(topGame.fen_before);
@@ -275,10 +259,8 @@ async function loadGames() {
       board.enableMoveInput(inputHandler, board_orientation)
     }
     board.setPosition(topGame.fen_before, true);
-    setTimeout(() => {
-      chess.move({ from: topGame.coord.slice(0, 2), to: topGame.coord.slice(3, 5) });
-      board.setPosition(chess.fen(), true);
-    }, 1000);
+    chess.move({ from: topGame.coord.slice(0, 2), to: topGame.coord.slice(3, 5) });
+    board.setPosition(chess.fen(), true);
 
     // Get stockfish best move
     stockfishBestMoveCoord = await getStockfishBestMove(topGame.fen, 15);
@@ -314,8 +296,7 @@ async function loadNextPuzzle() {
     }
 
     // Set the board to that position
-    var topGame = top_positions.top_position[puzzle_number]
-    var position_number = topGame.move;
+    topGame = top_positions.top_position[puzzle_number]
     stockfishBestMoveCoord = topGame.bestline.slice(0, 4)[0];
 
     // Update the board and show the last move made before the position
@@ -324,10 +305,8 @@ async function loadNextPuzzle() {
       board.enableMoveInput(inputHandler, board_orientation)
     }
     board.setPosition(topGame.fen_before, true);
-    setTimeout(() => {
-      chess.move({ from: topGame.coord.slice(0, 2), to: topGame.coord.slice(3, 5) });
-      board.setPosition(chess.fen(), true);
-    }, 1000);
+    chess.move({ from: topGame.coord.slice(0, 2), to: topGame.coord.slice(3, 5) });
+    board.setPosition(chess.fen(), true);
 
     // Convert Stockfish's best move from coordinate format to SAN format for display in the toast message
     stockfishBestMoveSAN = await convertCoordToSan(stockfishBestMoveCoord, topGame.fen);
@@ -346,4 +325,21 @@ async function loadNextPuzzle() {
 // Load Next Puzzle
 nextPuzzleButton.addEventListener('click', () => {
   loadNextPuzzle();
+})
+
+// On button click, show the continuation
+var seeContinuationButton = document.querySelector("#seeContinuation");
+seeContinuationButton.addEventListener('click', () => {
+
+  // Reset if changed
+  chess.load(topGame.fen_before);
+  board.setPosition(topGame.fen_before, true);
+  chess.move({ from: topGame.coord.slice(0, 2), to: topGame.coord.slice(3, 5) });
+  board.setPosition(chess.fen(), true);
+
+  // Animate through the best line
+  for (let i = 0; i < topGame.bestline.length; i++) {
+    chess.move({ from: topGame.bestline[i].slice(0, 2), to: topGame.bestline[i].slice(2, 4) });
+    board.setPosition(chess.fen(), true);
+  }
 })
