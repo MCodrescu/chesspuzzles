@@ -1,4 +1,4 @@
-function getStockfishBestMove(fen, depth) {
+/*function getStockfishBestMove(fen, depth) {
     var fen = encodeURIComponent(fen);
     var depth = depth;
     var url = `https://stockfish.online/api/s/v2.php?fen=${fen}&depth=${depth}`;
@@ -35,7 +35,7 @@ function getStockfishBestMove(fen, depth) {
                 }
             );
     })
-}
+} */
 
 const { spawn } = require('child_process');
 const engine = spawn('stockfish');

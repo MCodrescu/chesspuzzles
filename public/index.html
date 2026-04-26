@@ -99,8 +99,9 @@
                     <div class="row pb-3">
                         <div class="col">
                             <div class="btn-group w-40 w-md-20" role="group" aria-label="Basic example">
-                                <button class="btn btn-outline-primary" type="button" id="loadGames">
-                                    Generate
+                                <button class="btn btn-outline-primary" data-bs-toggle="modal"
+                                    data-bs-target="#selectGameModal" type="button" id="loadGames">
+                                    Load Game
                                 </button>
                                 <button class="btn btn-outline-primary" type="button" id="nextPuzzle">
                                     Next Puzzle
@@ -169,6 +170,36 @@
                 Info!
             </div>
             <div></div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="selectGameModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Select a Game</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="mb-3">
+                            <label for="chessUsername" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="chessUsername" value="MCodrescu">
+                        </div>
+                        <div class="mb-3">
+                            <input type="button" value="Get Recent Games" id="getRecentGamesButton"
+                                class="btn btn-primary">
+                        </div>
+                        <select class="form-select d-none" id="gameSelect" aria-label="Default select example">
+                        </select>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary disabled" id="generatePuzzleButton"
+                        data-bs-dismiss="modal">Generate Puzzles</button>
+                </div>
+            </div>
         </div>
     </div>
 
