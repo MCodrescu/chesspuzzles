@@ -144,18 +144,18 @@ function getYearMonthPairsLastNYears(n) {
  * @param {int} n The length of time in years to go back.
  * @returns An array of the players recent games.
  */
-export async function getPlayerRecentGames(username, n){
+export async function getPlayerRecentGames(username, n) {
 
     // Get the year month pairs going back in time
     const yearMonthPairs = getYearMonthPairsLastNYears(n);
 
     var playerGames = [];
     for (let i = 0; i < n * 12; i++) {
-      if (playerGames.length < 1) {
-        playerGames = await getPlayerGames(username, yearMonthPairs[i].year, yearMonthPairs[i].month);
-      } else {
-        break;
-      }
+        if (playerGames.length < 1) {
+            playerGames = await getPlayerGames(username, yearMonthPairs[i].year, yearMonthPairs[i].month);
+        } else {
+            break;
+        }
     }
     return playerGames;
 }
@@ -168,24 +168,24 @@ export async function getPlayerRecentGames(username, n){
  * @returns {{year: number, month: number}[]} Array length = n * 12
  */
 export async function fillGameSelect(playerGames, gameSelectElement, loadGamesButton) {
-  try {
+    try {
 
-    // Fill the select
-    for (let i = 0; i < playerGames.length; i++) {
-      var selectOption = document.createElement("option");
-      selectOption.value = playerGames[i].uuid;
-      selectOption.innerHTML = playerGames[i].eco;
-      gameSelectElement.appendChild(selectOption);
+        // Fill the select
+        for (let i = 0; i < playerGames.length; i++) {
+            var selectOption = document.createElement("option");
+            selectOption.value = playerGames[i].uuid;
+            selectOption.innerText = playerGames[i].eco.replace(/\/+$/, '').split('/').pop().replace(/-/g, ' ');
+            gameSelectElement.appendChild(selectOption);
+        }
+
+        loadGamesButton.setAttribute("class", "btn btn-primary enabled");
+        gameSelectElement.setAttribute("class", "form-select d-inline");
+
+        console.log("Player Games: ", playerGames);
+
+        return playerGames;
+
+    } catch (error) {
+        console.log("Error on fillGameSelect: ", error)
     }
-
-    loadGamesButton.setAttribute("class", "btn btn-primary enabled");
-    gameSelectElement.setAttribute("class", "form-select d-inline");
-
-    console.log("Player Games: ", playerGames);
-
-    return playerGames;
-
-  } catch (error) {
-    console.log("Error on fillGameSelect: ", error)
-  }
 }

@@ -44,6 +44,7 @@ var usernameTextInput = document.querySelector('#chessUsername');
 var loadGamesButton = document.querySelector('#generatePuzzleButton');
 var nextPuzzleButton = document.querySelector("#nextPuzzle");
 var chessUsername = document.querySelector("#chessUsername");
+var gameDetailsText = document.querySelector("#gameDetailsText");
 
 // Puzzle correct or incorrect toast message
 function showEngineBestMoveToast(source, target) {
@@ -122,11 +123,44 @@ const board = new Chessboard(document.getElementById("board"), {
   ]
 })
 
+// Populate the html element
+function showGameDetails(selectedGame, gameDetailsText) {
+  var timeClass = selectedGame.time_class;
+  var white = selectedGame.white.username;
+  var whiteRating = selectedGame.white.rating;
+  var whiteResult = selectedGame.white.result;
+  var black = selectedGame.black.username;
+  var blackRating = selectedGame.black.rating;
+  var blackResult = selectedGame.black.result;
+  gameDetailsText.innerHTML = `
+      <strong>Format</strong>: ${timeClass} <br><br>
+      <strong>Black</strong>: ${black}
+      <ul>
+        <li><strong>Result</strong>: ${blackResult}</li>
+        <li><strong>Rating</strong>: ${blackRating}</li>
+      </ul>
+      <strong>White</strong>: ${white}
+      <ul>
+        <li><strong>Result</strong>: ${whiteResult}</li>
+        <li><strong>Rating</strong>: ${whiteRating}</li>
+      </ul>
+      `
+}
+
+// Load the recent games
 getRecentGamesButton.addEventListener('click', () => {
   (async () => {
     playerGames = await getPlayerRecentGames(usernameTextInput.value, 3);
     await fillGameSelect(playerGames, gameSelect, loadGamesButton);
+    var selectedGame = playerGames.find((game) => game.uuid === gameSelect.value);
+    showGameDetails(selectedGame, gameDetailsText)
   })();
+})
+
+// Show the game details
+gameSelect.addEventListener('change', () => {
+  var selectedGame = playerGames.find((game) => game.uuid === gameSelect.value);
+  showGameDetails(selectedGame, gameDetailsText)
 })
 
 async function loadPuzzles(selectedGame, username) {
