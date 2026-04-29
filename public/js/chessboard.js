@@ -1,204 +1,284 @@
-// Initialize chessboard and chess.js game instance
-var board = null
-var game = new Chess()
-var stockfishBestMove;
+import { INPUT_EVENT_TYPE, COLOR, Chessboard, BORDER_TYPE } from "../node_modules/cm-chessboard/src/Chessboard.js"
+import { MARKER_TYPE, Markers } from "../node_modules/cm-chessboard/src/extensions/markers/Markers.js"
+import { PROMOTION_DIALOG_RESULT_TYPE, PromotionDialog } from "../node_modules/cm-chessboard/src/extensions/promotion-dialog/PromotionDialog.js"
+import { Accessibility } from "../node_modules/cm-chessboard/src/extensions/accessibility/Accessibility.js"
+import { Chess } from "https://cdn.jsdelivr.net/npm/chess.mjs@1/src/chess.mjs/Chess.js"
+import { RightClickAnnotator } from "../node_modules/cm-chessboard/src/extensions/right-click-annotator/RightClickAnnotator.js";
+
+// Import custom functions
+import {
+  getTopTenGamePositions,
+  getStockfishBestMove,
+  convertCoordToSan,
+  getBasicPlayerInfo,
+  fillGameSelect,
+  getPlayerRecentGames
+} from "./uiFunctions.js";
+
+// Initialize values
+var stockfishBestMoveCoord;
+var stockfishBestMoveSAN;
+const chess = new Chess();
+var lastMoveDetails = document.querySelector('#lastMoveDetails');
+var puzzle_number = 0;
+var board_orientation;
+var topPositions = [];
+var topPosition;
+var playerGames = [];
 
 // Toast Configuration
-var toastTriggerCorrect = document.getElementById('correctAnswerToastBtn')
 var toastLiveExample = document.getElementById('liveToast')
-var toastTriggerIncorrect = document.getElementById('incorrectAnswerToastBtn')
 var toastLiveWrong = document.getElementById('liveToastWrong')
+var toastInfo = document.getElementById('liveToastInfo')
 
 var toastBootstrapCorrect = bootstrap.Toast.getOrCreateInstance(toastLiveExample)
 var toastBootstrapIncorrect = bootstrap.Toast.getOrCreateInstance(toastLiveWrong)
+var toastBootstrapInfo = bootstrap.Toast.getOrCreateInstance(toastInfo)
 var incorrectToastBody = document.querySelector('#incorrectToastBody');
+var infoToastBody = document.querySelector('#infoToastBody');
 
-// Button Configuration 
-loadGamesButton = document.querySelector('#loadGames');
+// All Input Elements
+var getRecentGamesButton = document.querySelector("#getRecentGamesButton");
+var gameSelect = document.querySelector("#gameSelect");
+var usernameTextInput = document.querySelector('#chessUsername');
+var loadGamesButton = document.querySelector('#generatePuzzleButton');
+var nextPuzzleButton = document.querySelector("#nextPuzzle");
+var chessUsername = document.querySelector("#chessUsername");
+var gameDetailsText = document.querySelector("#gameDetailsText");
+var gameFormatSelect = document.querySelector("#gameFormatSelect");
 
-function onDragStart(source, piece, position, orientation) {
-  // do not pick up pieces if the game is over
-  if (game.game_over()) return false
-
-  // only pick up pieces for current orientation
-  if ((orientation === 'white' && piece.search(/^b/) !== -1) ||
-    (orientation === 'black' && piece.search(/^w/) !== -1)) {
-    return false
+// Puzzle correct or incorrect toast message
+function showEngineBestMoveToast(source, target) {
+  if (stockfishBestMoveCoord == `${source}${target}`) {
+    toastBootstrapCorrect.show();
+  } else {
+    incorrectToastBody.innerHTML = `Incorrect! Stockfish's Best Move: ${stockfishBestMoveSAN}`
+    toastBootstrapIncorrect.show();
   }
 }
 
-function onDrop(source, target) {
-  // see if the move is legal
-  var move = game.move({
-    from: source,
-    to: target,
-    promotion: 'q'
-  })
+// Define legal moves, promotions, and move validation for chessboard input
+function inputHandler(event) {
 
-  // illegal move
-  if (move === null) {
-    return 'snapback'
+  if (event.type === INPUT_EVENT_TYPE.movingOverSquare) {
+    return // ignore this event
+  }
+  if (event.type !== INPUT_EVENT_TYPE.moveInputFinished) {
+    event.chessboard.removeLegalMovesMarkers()
+  }
+  if (event.type === INPUT_EVENT_TYPE.moveInputStarted) {
+    // mark legal moves
+    const moves = chess.moves({ square: event.squareFrom, verbose: true })
+    event.chessboard.addLegalMovesMarkers(moves)
+    return moves.length > 0
 
-  } else {
-    if (stockfishBestMove.includes(`${source}${target}`)) {
+  } else if (event.type === INPUT_EVENT_TYPE.validateMoveInput) {
+    const move = { from: event.squareFrom, to: event.squareTo, promotion: event.promotion }
+    const result = chess.move(move)
 
-      toastBootstrapCorrect.show();
+    if (result) {
+      event.chessboard.state.moveInputProcess.then(() => { // wait for the move input process has finished
+        event.chessboard.setPosition(chess.fen(), true).then(() => { // update position, maybe castled and wait for animation has finished
+          showEngineBestMoveToast(event.squareFrom, event.squareTo)
+        })
+      })
     } else {
-      console.log('Incorrect Move');
+      // promotion?
+      let possibleMoves = chess.moves({ square: event.squareFrom, verbose: true })
+      for (const possibleMove of possibleMoves) {
+        if (possibleMove.promotion && possibleMove.to === event.squareTo) {
+          event.chessboard.showPromotionDialog(event.squareTo, COLOR.white, (result) => {
 
-      incorrectToastBody.innerHTML = `Incorrect! Stockfish's Best Move: ${stockfishBestMove[4]}`
+            if (result.type === PROMOTION_DIALOG_RESULT_TYPE.pieceSelected) {
+              chess.move({ from: event.squareFrom, to: event.squareTo, promotion: result.piece.charAt(1) })
+              event.chessboard.setPosition(chess.fen(), true)
+              showEngineBestMoveToast(event.squareFrom, event.squareTo)
 
-      toastBootstrapIncorrect.show();
+            } else {
+              // promotion canceled
+              event.chessboard.enableMoveInput(inputHandler, COLOR.white)
+              event.chessboard.setPosition(chess.fen(), true)
+            }
+          })
+          return true
+        }
+      }
+    }
+    return result
+  } else if (event.type === INPUT_EVENT_TYPE.moveInputFinished) {
+    if (event.legalMove) {
+      event.chessboard.disableMoveInput()
+    }
+  }
+}
+
+const board = new Chessboard(document.getElementById("board"), {
+  position: chess.fen(),
+  assetsUrl: "../node_modules/cm-chessboard/assets/",
+  style: { borderType: BORDER_TYPE.none, pieces: { file: "pieces/staunty.svg" }, animationDuration: 1000 },
+  extensions: [
+    { class: Markers, props: { autoMarkers: MARKER_TYPE.square } },
+    { class: RightClickAnnotator },
+    { class: PromotionDialog },
+    { class: Accessibility, props: { visuallyHidden: true } }
+  ]
+})
+
+// Populate the html element
+function showGameDetails(selectedGame, gameDetailsText) {
+  var timeClass = selectedGame.time_class;
+  var white = selectedGame.white.username;
+  var whiteRating = selectedGame.white.rating;
+  var whiteResult = selectedGame.white.result;
+  var black = selectedGame.black.username;
+  var blackRating = selectedGame.black.rating;
+  var blackResult = selectedGame.black.result;
+  gameDetailsText.innerHTML = `
+      <strong>Format</strong>: ${timeClass} <br><br>
+      <strong>Black</strong>: ${black}
+      <ul>
+        <li><strong>Result</strong>: ${blackResult}</li>
+        <li><strong>Rating</strong>: ${blackRating}</li>
+      </ul>
+      <strong>White</strong>: ${white}
+      <ul>
+        <li><strong>Result</strong>: ${whiteResult}</li>
+        <li><strong>Rating</strong>: ${whiteRating}</li>
+      </ul>
+      `
+}
+
+// Load the recent games
+getRecentGamesButton.addEventListener('click', () => {
+  (async () => {
+    playerGames = await getPlayerRecentGames(usernameTextInput.value, 3);
+    await fillGameSelect(playerGames, gameSelect, loadGamesButton, gameFormatSelect.value);
+    var selectedGame = playerGames.find((game) => game.uuid === gameSelect.value);
+    showGameDetails(selectedGame, gameDetailsText)
+  })();
+})
+
+// Show the game details
+gameSelect.addEventListener('change', () => {
+  var selectedGame = playerGames.find((game) => game.uuid === gameSelect.value);
+  showGameDetails(selectedGame, gameDetailsText)
+})
+
+async function loadPuzzles(selectedGame, username) {
+  try {
+
+    // Get basic player info
+    var playerInfo = await getBasicPlayerInfo(username);
+    console.log("Player Info: ", playerInfo);
+
+    // Clear old toasts
+    toastBootstrapCorrect.hide();
+    toastBootstrapIncorrect.hide();
+
+    // Show loading message
+    infoToastBody.innerHTML = "Processing positions ...";
+    toastBootstrapInfo.show();
+
+    // Get the correct board orientation.
+    board_orientation = selectedGame.white.username === `${username}` ? COLOR.white : COLOR.black;
+    console.log("Board Orientation: ", board_orientation);
+
+    // Load top ten positions from that game
+    topPositions = await getTopTenGamePositions(selectedGame.pgn, board_orientation);
+    console.log("Top Positions: ", topPositions);
+
+    toastBootstrapInfo.hide();
+    topPosition = topPositions[puzzle_number];
+    console.log("Top Position: ", topPosition);
+
+    // Update the board and show the last move made before the position
+    chess.load(topPosition.fen_before);
+    board.setOrientation(board_orientation);
+    if (!board.isMoveInputEnabled()) {
+      board.enableMoveInput(inputHandler, board_orientation)
+    }
+    board.setPosition(topPosition.fen_before, true);
+    chess.move({ from: topPosition.coord.slice(0, 2), to: topPosition.coord.slice(3, 5) });
+    board.setPosition(chess.fen(), true);
+
+    // Get stockfish best move
+    stockfishBestMoveCoord = await getStockfishBestMove(topPosition.fen, 15);
+
+    // Convert Stockfish's best move from coordinate format to SAN format for display in the toast message
+    stockfishBestMoveSAN = await convertCoordToSan(stockfishBestMoveCoord, topPosition.fen);
+
+    // show game info
+    lastMoveDetails.innerHTML = `
+        <strong>${board_orientation === COLOR.white ? 'White to Move' : 'Black to Move'}</strong>:
+        Last Move: ${topPosition.san}
+      `;
+  } catch (error) {
+    console.log("Error in loading puzzles: ", error);
+  }
+}
+
+// Generate top ten puzzles
+loadGamesButton.addEventListener('click', function () {
+  var selectedGame = playerGames.find((game) => game.uuid === gameSelect.value);
+
+  console.log("Selected Game: ", selectedGame);
+
+  loadPuzzles(selectedGame, chessUsername.value);
+})
+
+async function loadNextPuzzle() {
+  try {
+    if (puzzle_number == 10) {
+      return;
+    } else {
+      puzzle_number += 1;
     }
 
+    // Set the board to that position
+    topPosition = topPositions[puzzle_number]
+    stockfishBestMoveCoord = topPosition.bestline.slice(0, 4)[0];
+
+    // Update the board and show the last move made before the position
+    chess.load(topPosition.fen_before);
+    if (!board.isMoveInputEnabled()) {
+      board.enableMoveInput(inputHandler, board_orientation)
+    }
+    board.setPosition(topPosition.fen_before, true);
+    chess.move({ from: topPosition.coord.slice(0, 2), to: topPosition.coord.slice(3, 5) });
+    board.setPosition(chess.fen(), true);
+
+    // Convert Stockfish's best move from coordinate format to SAN format for display in the toast message
+    stockfishBestMoveSAN = await convertCoordToSan(stockfishBestMoveCoord, topPosition.fen);
+
+    // show game info
+    lastMoveDetails.innerHTML = `
+        <strong>${board_orientation === COLOR.white ? 'White to Move' : 'Black to Move'}</strong>:
+        Last Move: ${topPosition.san}
+      `;
+
+  } catch (error) {
+    console.log("Error in loadNextPuzzle: ", error)
   }
 }
 
-// update the board position after the piece snap
-// for castling, en passant, pawn promotion
-function onSnapEnd() {
-  board.position(game.fen())
-}
+// Load Next Puzzle
+nextPuzzleButton.addEventListener('click', () => {
+  loadNextPuzzle();
+})
 
-var config = {
-  draggable: true,
-  position: 'start',
-  moveSpeed: 'slow',
-  onDragStart: onDragStart,
-  onDrop: onDrop,
-  onSnapEnd: onSnapEnd
-}
+// On button click, show the continuation
+var seeContinuationButton = document.querySelector("#seeContinuation");
+seeContinuationButton.addEventListener('click', () => {
 
-board = Chessboard('board1', config)
+  // Reset if changed
+  chess.load(topPosition.fen_before);
+  board.setPosition(topPosition.fen_before, true);
+  chess.move({ from: topPosition.coord.slice(0, 2), to: topPosition.coord.slice(3, 5) });
+  board.setPosition(chess.fen(), true);
 
-
-// Load a new puzzle
-loadGamesButton.addEventListener('click', function () {
-  username = document.querySelector('#chessUsername').value;
-  year = document.querySelector('#year').value;
-  month = document.querySelector('#month').value;
-  format = document.querySelector('#gameFormat').value;
-  game_number = document.querySelector('#gameNumber').value;
-
-  // Clear old toasts
-  toastBootstrapCorrect.hide();
-  toastBootstrapIncorrect.hide();
-
-  // Get basic player info
-  fetch(`/chesswebapi/player/${username}`)
-    .then(response => response.json())
-    .then(data => console.log('Player Profile', data))
-    .catch(err => console.error(err));
-
-  // Load recent games
-  fetch(`/chesswebapi/player/games/${username}/${year}/${month}`)
-    .then(response => response.json())
-    .then(data => {
-
-      console.log('Player Games', data)
-
-      var board_orientation = data.games[game_number].white.username === `${username}` ? 'white' : 'black';
-
-      // Get the FEN list for the selected game
-      // Display a random position from the game
-      fetch(`/chesswebapi/gamefen/${username}/${year}/${month}/${format}/` + data.games[game_number].uuid)
-        .then(response => response.json())
-        .then(data => {
-          console.log('Game FENs', data)
-
-          total_moves = data.positions.length - 1;
-          position_number = Math.random() * total_moves;
-          position_number = Math.ceil(position_number);
-
-          console.log(`Position Number: ${position_number} / Total Moves: ${total_moves}`);
-
-          position_number_is_even = position_number % 2 === 0;
-          if (board_orientation === 'black') {
-            if (position_number_is_even)
-              position_number = position_number - 1;
-          } else {
-            if (!position_number_is_even)
-              position_number = position_number - 1;
-          }
-          position_number_is_even = position_number % 2 === 0;
-          player_to_move = position_number_is_even ? 'white' : 'black';
-
-          console.log(`Position number: ${position_number} / position_number_is_even: ${position_number_is_even} / Player to Move: ${player_to_move} / Board Orientation: ${board_orientation}`);
-          console.log(`Move Coord: ${data.positions[position_number].coord}`)
-
-          // Update the board and show the last move made before the position
-          game = new Chess(data.positions[position_number - 1].fen);
-          board.orientation(board_orientation);
-          board.position(data.positions[position_number - 1].fen);
-          setTimeout(() => {
-            board.move(data.positions[position_number].coord);
-            game.move({ from: data.positions[position_number].coord.slice(0, 2), to: data.positions[position_number].coord.slice(3, 5) });
-          }, 1000);
-
-
-          // Get Stockfish's best move for the position
-          fetch(`/stockfish/bestmove/`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ fen: data.positions[position_number].fen, depth: 15 })
-          })
-            .then(response => response.json())
-            .then(stockfishData => {
-              console.log('Stockfish Data', stockfishData);
-              console.log('Stockfish Best Move Coord', stockfishData.bestmove);
-              stockfishBestMove = stockfishData.bestmove.split(" ");
-
-              // Convert Stockfish's best move from coordinate format to SAN format for display in the toast message
-              fetch('/chesswebapi/convertCoordtoSAN/', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                  coord: stockfishBestMove[3],
-                  fen: data.positions[position_number - 1].fen
-                })
-              })
-                .then(response => response.json())
-                .then(sanData => {
-                  stockfishBestMove.push(sanData.san);
-                })
-                .catch(err => console.error(err));
-
-            })
-            .catch(err => console.error(err));
-
-          // How much does the evaluation change if the best move is played?
-          // This helps determine the puzzle difficulty
-          fetch('/stockfish/evaluationChange/', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              fen: data.positions[position_number].fen,
-              depth: 15,
-              orientation: board_orientation
-            })
-          })
-            .then(response => response.json())
-            .then(evaluationData => {
-              console.log('Evaluation Change', evaluationData);
-            })
-            .catch(err => console.error(err));
-
-          // show game info
-          gameInfo.innerHTML = `
-          <strong>${board_orientation === 'white' ? 'White to Move' : 'Black to Move'}</strong><br>
-          Last Move: ${data.positions[position_number].san}
-          `;
-
-        })
-        .catch(err => console.error(err));
-
-    })
-    .catch(err => console.error(err));
-
+  // Animate through the best line
+  for (let i = 0; i < topPosition.bestline.length; i++) {
+    chess.move({ from: topPosition.bestline[i].slice(0, 2), to: topPosition.bestline[i].slice(2, 4) });
+    board.setPosition(chess.fen(), true);
+  }
 })

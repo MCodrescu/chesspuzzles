@@ -165,13 +165,22 @@ export async function getPlayerRecentGames(username, n) {
  * @param {array} playerGames The result of getPlayerRecentGames.
  * @param {HTMLSelectElement} gameSelectElement - The game select element in the DOM.
  * @param {HTMLButtonElement} loadGamesButton - The button to load the games.
+ * @param {boolean} gameFormat - The game format to filter on.
  * @returns {{year: number, month: number}[]} Array length = n * 12
  */
-export async function fillGameSelect(playerGames, gameSelectElement, loadGamesButton) {
+export async function fillGameSelect(playerGames, gameSelectElement, loadGamesButton, gameFormat) {
     try {
 
         // Fill the select
         for (let i = 0; i < playerGames.length; i++) {
+
+            // Don't add the game if it's not the correct time control
+            if (gameFormat != "all"){
+                if (playerGames[i].time_class != gameFormat){
+                    continue;
+                }
+            }
+
             var selectOption = document.createElement("option");
             selectOption.value = playerGames[i].uuid;
             selectOption.innerText = playerGames[i].eco.replace(/\/+$/, '').split('/').pop().replace(/-/g, ' ');
