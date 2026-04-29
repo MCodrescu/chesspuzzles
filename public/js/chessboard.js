@@ -126,6 +126,7 @@ const board = new Chessboard(document.getElementById("board"), {
 
 // Populate the html element
 function showGameDetails(selectedGame, gameDetailsText) {
+  var opening = selectedGame.eco.replace(/\/+$/, '').split('/').pop().replace(/-/g, ' ')
   var timeClass = selectedGame.time_class;
   var white = selectedGame.white.username;
   var whiteRating = selectedGame.white.rating;
@@ -134,6 +135,7 @@ function showGameDetails(selectedGame, gameDetailsText) {
   var blackRating = selectedGame.black.rating;
   var blackResult = selectedGame.black.result;
   gameDetailsText.innerHTML = `
+      <strong>Opening</strong> ${opening} <br>
       <strong>Format</strong>: ${timeClass} <br><br>
       <strong>Black</strong>: ${black}
       <ul>

@@ -171,6 +171,9 @@ export async function getPlayerRecentGames(username, n) {
 export async function fillGameSelect(playerGames, gameSelectElement, loadGamesButton, gameFormat) {
     try {
 
+        // Empty prior loaded games
+        gameSelectElement.replaceChildren();
+
         // Fill the select
         for (let i = 0; i < playerGames.length; i++) {
 
@@ -183,8 +186,11 @@ export async function fillGameSelect(playerGames, gameSelectElement, loadGamesBu
 
             var selectOption = document.createElement("option");
             selectOption.value = playerGames[i].uuid;
-            selectOption.innerText = playerGames[i].eco.replace(/\/+$/, '').split('/').pop().replace(/-/g, ' ');
-            gameSelectElement.appendChild(selectOption);
+            selectOption.innerText = `
+                White: ${playerGames[i].white.username} (${playerGames[i].white.rating}) 
+                v. Black: ${playerGames[i].black.username} (${playerGames[i].black.rating})
+            `
+            gameSelectElement.prepend(selectOption);
         }
 
         loadGamesButton.setAttribute("class", "btn btn-primary enabled");
