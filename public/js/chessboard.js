@@ -204,10 +204,10 @@ async function loadPuzzles(selectedGame, username) {
     board.setPosition(chess.fen(), true);
 
     // Get stockfish best move
-    stockfishBestMoveCoord = await getStockfishBestMove(topPosition.fen, 15);
+    stockfishBestMoveCoord = topPosition.bestline[0];
 
     // Convert Stockfish's best move from coordinate format to SAN format for display in the toast message
-    stockfishBestMoveSAN = await convertCoordToSan(stockfishBestMoveCoord, topPosition.fen);
+    stockfishBestMoveSAN = await convertCoordToSan(topPosition.bestline[0], topPosition.fen);
 
     // show game info
     lastMoveDetails.innerHTML = `

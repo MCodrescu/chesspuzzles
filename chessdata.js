@@ -105,7 +105,7 @@ async function getTopTenPositions(pgn, orientation, depth) {
         }
 
         valid.sort((a, b) => b.eval_change - a.eval_change);
-        const top = valid.slice(0, 10);
+        const top = valid.slice(1, 10);
         return top;
     } catch (e) {
         console.error('PGN parse error for', e);

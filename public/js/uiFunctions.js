@@ -34,6 +34,7 @@ export async function convertCoordToSan(coord, fen) {
             })
         })
         const sanData = await response.json();
+        console.log("Stockfish BestMove SAN: ", sanData.san);
         return sanData.san;
     } catch (error) {
         console.log("Error in convertCoordToSan: ", error);
