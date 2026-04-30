@@ -11,8 +11,6 @@ const { getStockfishBestMove } = require('./engine');
  */
 async function getTopTenPositions(pgn, orientation, depth) {
     try {
-        //console.log("PGN: ", pgn);
-        //console.log("Orientation: ", orientation);
         const chess = new Chess();
         chess.loadPgn(pgn || '');
         const moves = chess.history();
@@ -55,14 +53,17 @@ async function getTopTenPositions(pgn, orientation, depth) {
                 continue;
             }
             try {
-                //await sleep(200); // adjust ms to match rate limit
-                //console.log("FEN of Position: ", pos.fen);
                 const bestData = await getStockfishBestMove(pos.fen, depth, 10000);
                 if (!bestData || bestData.mate) {
                     continue;
                 }
 
-                const current_eval = bestData.evaluation;
+                let current_eval = bestData.evaluation;
+                // Stockfish evaluates from White's perspective, so negate for Black
+                if (pos.turn === 'b') {
+                    current_eval = -current_eval;
+                }
+
                 const bestline = bestData.continuation || [];
                 if (!bestline.length) {
                     pos.current_eval = current_eval;
@@ -80,10 +81,15 @@ async function getTopTenPositions(pgn, orientation, depth) {
                         continue;
                     }
 
-                    const eval_after = afterData.evaluation;
-                    const eval_change = orientation === 'w'
-                        ? eval_after - current_eval
-                        : current_eval - eval_after;
+                    let eval_after = afterData.evaluation;
+                    // Adjust for whose turn it will be after the move
+                    const nextTurn = pos.turn === 'w' ? 'b' : 'w';
+                    if (nextTurn === 'b') {
+                        eval_after = -eval_after;
+                    }
+
+                    // Now all evals are from the current player's perspective
+                    const eval_change = eval_after - current_eval;
 
                     pos.current_eval = current_eval;
                     pos.eval_after = eval_after;
@@ -104,14 +110,19 @@ async function getTopTenPositions(pgn, orientation, depth) {
             return [];
         }
 
-        valid.sort((a, b) => b.eval_change - a.eval_change);
-        const top = valid.slice(1, 10);
+        // Filter for winning positions (positive eval from current player's perspective)
+        const filtered = valid
+            .filter(position => position.eval_after > 0)
+            .sort((a, b) => b.eval_change - a.eval_change);
+
+        const top = filtered.slice(0, 10);
         return top;
     } catch (e) {
         console.error('PGN parse error for', e);
         return [];
     }
 }
+
 
 module.exports = { getTopTenPositions };
 

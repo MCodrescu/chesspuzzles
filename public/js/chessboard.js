@@ -196,9 +196,7 @@ async function loadPuzzles(selectedGame, username) {
     // Update the board and show the last move made before the position
     chess.load(topPosition.fen_before);
     board.setOrientation(board_orientation);
-    if (!board.isMoveInputEnabled()) {
-      board.enableMoveInput(inputHandler, board_orientation)
-    }
+    board.enableMoveInput(inputHandler, board_orientation)
     board.setPosition(topPosition.fen_before, true);
     chess.move({ from: topPosition.coord.slice(0, 2), to: topPosition.coord.slice(3, 5) });
     board.setPosition(chess.fen(), true);
@@ -222,9 +220,7 @@ async function loadPuzzles(selectedGame, username) {
 // Generate top ten puzzles
 loadGamesButton.addEventListener('click', function () {
   var selectedGame = playerGames.find((game) => game.uuid === gameSelect.value);
-
   console.log("Selected Game: ", selectedGame);
-
   loadPuzzles(selectedGame, chessUsername.value);
 })
 

@@ -38,11 +38,49 @@
 } */
 
 const { spawn } = require('child_process');
+
 const engine = spawn('stockfish');
 
+let requestQueue = [];
+let isProcessing = false;
+
+async function processQueue() {
+    if (isProcessing || requestQueue.length === 0) return;
+    
+    isProcessing = true;
+    const request = requestQueue.shift();
+    
+    try {
+        const result = await request.execute();
+        request.resolve(result);
+    } catch (err) {
+        request.reject(err);
+    }
+    
+    isProcessing = false;
+    
+    // Process next item in queue if available
+    if (requestQueue.length > 0) {
+        processQueue();
+    }
+}
+
 function getStockfishBestMove(fen, depth, timeoutMs = 5000) {
+    return new Promise((resolve, reject) => {
+        const request = {
+            execute: () => performAnalysis(fen, depth, timeoutMs),
+            resolve,
+            reject
+        };
+        
+        requestQueue.push(request);
+        processQueue();
+    });
+}
+
+function performAnalysis(fen, depth, timeoutMs) {
     if (!engine || !engine.stdout) {
-        return Promise.reject(new Error('Invalid engine: spawn Stockfish and pass the child process as "engine"'));
+        return Promise.reject(new Error('Invalid engine: Stockfish engine not initialized'));
     }
 
     return new Promise((resolve, reject) => {
@@ -58,7 +96,7 @@ function getStockfishBestMove(fen, depth, timeoutMs = 5000) {
             text.split(/\r?\n/).forEach(l => {
                 if (!l) return;
                 lines.push(l);
-                if (l.startsWith('info') & l.includes("depth " + depth)) {
+                if (l.startsWith('info') && l.includes("depth " + depth)) {
                     const mCp = l.match(/score\s+cp\s+(-?\d+)/);
                     const mate = l.match(/mate\s+(-?\d+)/);
                     const mPv = l.match(/\bpv\b\s+(.+)$/);
@@ -73,7 +111,11 @@ function getStockfishBestMove(fen, depth, timeoutMs = 5000) {
             });
         };
 
-        const onError = err => { cleanup(); reject(err); };
+        const onError = err => { 
+            cleanup(); 
+            reject(err); 
+        };
+        
         const onExit = (code, sig) => {
             cleanup();
             if (!bestmoveLine && !timedOut) {
@@ -93,13 +135,17 @@ function getStockfishBestMove(fen, depth, timeoutMs = 5000) {
             if (timedOut) return;
             cleanup();
             const lastLine = lines.length ? lines[lines.length - 1] : '';
-            resolve({ bestmove: lastLine, evaluation: lastInfoCp, continuation: lastInfoPv, mate: lastMate });
+            resolve({ 
+                bestmove: lastLine, 
+                evaluation: lastInfoCp, 
+                continuation: lastInfoPv, 
+                mate: lastMate 
+            });
         };
 
         const timer = setTimeout(() => {
             timedOut = true;
             cleanup();
-            if (bestmoveLine) return finish();
             reject(new Error('Timeout waiting for bestmove from Stockfish'));
         }, timeoutMs);
 
@@ -127,8 +173,12 @@ function getStockfishBestMove(fen, depth, timeoutMs = 5000) {
             await waitFor('readyok');
             engine.stdin.write(`position fen ${fen}\n`);
             engine.stdin.write(`go depth ${depth}\n`);
-        })().catch(err => { cleanup(); reject(err); });
+        })().catch(err => { 
+            cleanup(); 
+            reject(err); 
+        });
     });
 }
 
 module.exports = { getStockfishBestMove };
+
