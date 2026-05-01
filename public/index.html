@@ -103,9 +103,6 @@
                                     data-bs-target="#selectGameModal" type="button" id="loadGames">
                                     Load Game
                                 </button>
-                                <button class="btn btn-outline-primary" type="button" id="nextPuzzle">
-                                    Next Puzzle
-                                </button>
                                 <button class="btn btn-outline-primary" type="button" id="seeContinuation">
                                     See Continuation
                                 </button>
@@ -116,9 +113,9 @@
                         </div>
                     </div>
                     <div class="row justify-content-center">
-                        <div class="col-12 col-md-8 bg-white rounded-5 p-3 p-md-4 shadow">
+                        <div class="col-12 col-md-8 bg-white rounded-5 p-3 p-md-4 shadow justify-content-center">
                             <nav aria-label="...">
-                                <ul class="pagination text-center" id = "puzzlePagination">
+                                <ul class="pagination text-center" id="puzzlePagination">
                                 </ul>
                             </nav>
                             <div class="board board-large" id="board"></div>
@@ -202,7 +199,24 @@
                         </div>
                         <div class="mb-3">
                             <input type="button" value="Get Recent Games" id="getRecentGamesButton"
-                                class="btn btn-primary">
+                                class="btn btn-outline-primary float-right">
+                        </div>
+                        <div class = "mb-3">
+                            <div class="btn-group w-100 d-none">
+                                <button type="button" class="btn btn-white border dropdown-toggle" data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                                    Select Game
+                                </button>
+                                <ul class="dropdown-menu w-100" id = "gameSelectDropdown" style="max-height: 50vh; overflow-y: auto;">
+                                    <li><a class="dropdown-item" href="#">Action</a></li>
+                                    <li><a class="dropdown-item" href="#">Another action</a></li>
+                                    <li><a class="dropdown-item" href="#">Something else here</a></li>
+                                    <li>
+                                        <hr class="dropdown-divider">
+                                    </li>
+                                    <li><a class="dropdown-item" href="#">Separated link</a></li>
+                                </ul>
+                            </div>
                         </div>
                         <div class="mb-3">
                             <select class="form-select d-none" id="gameSelect" aria-label="Default select example">
@@ -213,7 +227,7 @@
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer d-flex justify-content-start">
                     <button type="button" class="btn btn-primary disabled" id="generatePuzzleButton"
                         data-bs-dismiss="modal">Generate Puzzles</button>
                 </div>

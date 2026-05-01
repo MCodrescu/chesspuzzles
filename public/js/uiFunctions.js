@@ -179,8 +179,8 @@ export async function fillGameSelect(playerGames, gameSelectElement, loadGamesBu
         for (let i = 0; i < playerGames.length; i++) {
 
             // Don't add the game if it's not the correct time control
-            if (gameFormat != "all"){
-                if (playerGames[i].time_class != gameFormat){
+            if (gameFormat != "all") {
+                if (playerGames[i].time_class != gameFormat) {
                     continue;
                 }
             }
@@ -192,6 +192,77 @@ export async function fillGameSelect(playerGames, gameSelectElement, loadGamesBu
                 v. Black: ${playerGames[i].black.username} (${playerGames[i].black.rating})
             `
             gameSelectElement.prepend(selectOption);
+        }
+
+        loadGamesButton.setAttribute("class", "btn btn-primary enabled");
+        gameSelectElement.setAttribute("class", "form-select d-inline");
+
+        console.log("Player Games: ", playerGames);
+
+        return playerGames;
+
+    } catch (error) {
+        console.log("Error on fillGameSelect: ", error)
+    }
+}
+
+/**
+ * Fill in the select options with the users recent games
+ * @param {array} playerGames The result of getPlayerRecentGames.
+ * @param {HTMLSelectElement} gameSelectDropdownElement - The game dropdown select element in the DOM.
+ * @param {HTMLButtonElement} loadGamesButton - The button to load the games.
+ * @param {boolean} gameFormat - The game format to filter on.
+ * @returns {{year: number, month: number}[]} Array length = n * 12
+ */
+export async function fillGameSelectDropdown(playerGames, gameSelectDropdownElement, loadGamesButton, gameFormat) {
+    try {
+
+        // Empty prior loaded games
+        gameSelectDropdownElement.replaceChildren();
+
+        // Fill the select
+        for (let i = 0; i < playerGames.length; i++) {
+
+            // Don't add the game if it's not the correct time control
+            if (gameFormat != "all") {
+                if (playerGames[i].time_class != gameFormat) {
+                    continue;
+                }
+            }
+            var listElement = document.createElement("li");
+            var linkElement = document.createElement("a");
+            linkElement.setAttribute("class", "dropdown-item");
+            linkElement.value = playerGames[i].uuid;
+
+            var opening = playerGames[i].eco.replace(/\/+$/, '').split('/').pop().replace(/-/g, ' ')
+            var timeClass = playerGames[i].time_class;
+            var white = playerGames[i].white.username;
+            var whiteRating = playerGames[i].white.rating;
+            var whiteResult = playerGames[i].white.result;
+            var black = playerGames[i].black.username;
+            var blackRating = playerGames[i].black.rating;
+            var blackResult = playerGames[i].black.result;
+            linkElement.innerHTML = `
+                <strong>Opening</strong> ${opening} <br>
+                <strong>Format</strong>: ${timeClass} <br><br>
+                <strong>Black</strong>: ${black}
+                <ul>
+                    <li><strong>Result</strong>: ${blackResult}</li>
+                    <li><strong>Rating</strong>: ${blackRating}</li>
+                </ul>
+                <strong>White</strong>: ${white}
+                <ul>
+                    <li><strong>Result</strong>: ${whiteResult}</li>
+                    <li><strong>Rating</strong>: ${whiteRating}</li>
+                </ul>
+            `
+            listElement.appendChild(linkElement);
+
+            // Add the game details and a divider
+            gameSelectDropdownElement.prepend(listElement);
+            var divider = document.createElement("li");
+            divider.innerHTML = '<hr class="dropdown-divider">';
+            gameSelectDropdownElement.prepend(divider);
         }
 
         loadGamesButton.setAttribute("class", "btn btn-primary enabled");

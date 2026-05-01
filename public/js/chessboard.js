@@ -12,6 +12,7 @@ import {
   convertCoordToSan,
   getBasicPlayerInfo,
   fillGameSelect,
+  fillGameSelectDropdown,
   getPlayerRecentGames
 } from "./uiFunctions.js";
 
@@ -47,6 +48,7 @@ var chessUsername = document.querySelector("#chessUsername");
 var gameDetailsText = document.querySelector("#gameDetailsText");
 var gameFormatSelect = document.querySelector("#gameFormatSelect");
 var puzzlePagination = document.querySelector("#puzzlePagination");
+var gameSelectDropdown = document.querySelector("#gameSelectDropdown");
 
 // Puzzle correct or incorrect toast message
 function showEngineBestMoveToast(source, target) {
@@ -156,7 +158,8 @@ getRecentGamesButton.addEventListener('click', () => {
   (async () => {
     playerGames = await getPlayerRecentGames(usernameTextInput.value, 3);
     await fillGameSelect(playerGames, gameSelect, loadGamesButton, gameFormatSelect.value);
-    var selectedGame = playerGames.find((game) => game.uuid === gameSelect.value);
+    //await fillGameSelectDropdown(playerGames, gameSelectDropdown, loadGamesButton, gameFormatSelect.value);
+    var selectedGame = playerGames.find((game) => game.uuid === gameSelectDropdown.value);
     showGameDetails(selectedGame, gameDetailsText)
   })();
 })
@@ -192,31 +195,35 @@ async function loadPuzzles(selectedGame, username) {
 
     // Create the pagination elements
     puzzlePagination.replaceChildren();
-    for(let i = 0; i < topPositions.length;i++){
+    for (let i = 0; i < topPositions.length; i++) {
       var linkElement = document.createElement("a");
       var listElement = document.createElement("li");
       linkElement.setAttribute("class", "page-link");
       linkElement.innerHTML = i + 1;
       linkElement.onclick = () => loadPuzzleNumber(i);
       listElement.setAttribute("class", "page-item");
-      if (i == 0){
+      if (i == 0) {
         listElement.setAttribute("class", "page-item active");
       }
       listElement.appendChild(linkElement);
       puzzlePagination.appendChild(listElement);
     }
 
-    toastBootstrapInfo.hide();
     topPosition = topPositions[puzzle_number];
     console.log("Top Position: ", topPosition);
 
     // Update the board and show the last move made before the position
     chess.load(topPosition.fen_before);
     board.setOrientation(board_orientation);
-    board.enableMoveInput(inputHandler, board_orientation)
+    board.disableMoveInput();
+    board.enableMoveInput(inputHandler, board_orientation);
     board.setPosition(topPosition.fen_before, true);
     chess.move({ from: topPosition.coord.slice(0, 2), to: topPosition.coord.slice(3, 5) });
     board.setPosition(chess.fen(), true);
+
+    // show informational Toast
+    infoToastBody.innerHTML = `Best Move Eval Change: ${topPosition.eval_change}`;
+    toastBootstrapInfo.show();
 
     // Get stockfish best move
     stockfishBestMoveCoord = topPosition.bestline[0];
@@ -236,9 +243,9 @@ async function loadPuzzles(selectedGame, username) {
 
 // Generate top ten puzzles
 loadGamesButton.addEventListener('click', function () {
-  var selectedGame = playerGames.find((game) => game.uuid === gameSelect.value);
-  console.log("Selected Game: ", selectedGame);
-  loadPuzzles(selectedGame, chessUsername.value);
+    var selectedGame = playerGames.find((game) => game.uuid === gameSelect.value);
+    console.log("Selected Game: ", selectedGame);
+    loadPuzzles(selectedGame, chessUsername.value);
 })
 
 /**
@@ -261,6 +268,10 @@ async function loadPuzzleNumber(puzzleNumber) {
     // Set the board to that position
     topPosition = topPositions[puzzleNumber]
     stockfishBestMoveCoord = topPosition.bestline.slice(0, 4)[0];
+
+    // show informational Toast
+    infoToastBody.innerHTML = `Best Move Eval Change: ${topPosition.eval_change}`;
+    toastBootstrapInfo.show();
 
     // Update the board and show the last move made before the position
     chess.load(topPosition.fen_before);
