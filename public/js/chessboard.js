@@ -46,6 +46,7 @@ var nextPuzzleButton = document.querySelector("#nextPuzzle");
 var chessUsername = document.querySelector("#chessUsername");
 var gameDetailsText = document.querySelector("#gameDetailsText");
 var gameFormatSelect = document.querySelector("#gameFormatSelect");
+var puzzlePagination = document.querySelector("#puzzlePagination");
 
 // Puzzle correct or incorrect toast message
 function showEngineBestMoveToast(source, target) {
@@ -189,6 +190,22 @@ async function loadPuzzles(selectedGame, username) {
     topPositions = await getTopTenGamePositions(selectedGame.pgn, board_orientation);
     console.log("Top Positions: ", topPositions);
 
+    // Create the pagination elements
+    puzzlePagination.replaceChildren();
+    for(let i = 0; i < topPositions.length;i++){
+      var linkElement = document.createElement("a");
+      var listElement = document.createElement("li");
+      linkElement.setAttribute("class", "page-link");
+      linkElement.innerHTML = i + 1;
+      linkElement.onclick = () => loadPuzzleNumber(i);
+      listElement.setAttribute("class", "page-item");
+      if (i == 0){
+        listElement.setAttribute("class", "page-item active");
+      }
+      listElement.appendChild(linkElement);
+      puzzlePagination.appendChild(listElement);
+    }
+
     toastBootstrapInfo.hide();
     topPosition = topPositions[puzzle_number];
     console.log("Top Position: ", topPosition);
@@ -224,16 +241,25 @@ loadGamesButton.addEventListener('click', function () {
   loadPuzzles(selectedGame, chessUsername.value);
 })
 
-async function loadNextPuzzle() {
+/**
+ * Load the puzzle by number.
+ * @param puzzleNumber int - The puzzle number to load.
+ * 
+ */
+async function loadPuzzleNumber(puzzleNumber) {
   try {
-    if (puzzle_number == 10) {
+    if (puzzleNumber == 10) {
       return;
-    } else {
-      puzzle_number += 1;
     }
 
+    // Update the active pagination
+    var pageItem = puzzlePagination.querySelectorAll(".page-item")[puzzleNumber];
+    var activePageItem = puzzlePagination.querySelector(".page-item.active");
+    activePageItem.setAttribute("class", "page-item");
+    pageItem.setAttribute("class", "page-item active");
+
     // Set the board to that position
-    topPosition = topPositions[puzzle_number]
+    topPosition = topPositions[puzzleNumber]
     stockfishBestMoveCoord = topPosition.bestline.slice(0, 4)[0];
 
     // Update the board and show the last move made before the position
@@ -255,14 +281,9 @@ async function loadNextPuzzle() {
       `;
 
   } catch (error) {
-    console.log("Error in loadNextPuzzle: ", error)
+    console.log("Error in loadPuzzleNumber: ", error)
   }
 }
-
-// Load Next Puzzle
-nextPuzzleButton.addEventListener('click', () => {
-  loadNextPuzzle();
-})
 
 // On button click, show the continuation
 var seeContinuationButton = document.querySelector("#seeContinuation");
