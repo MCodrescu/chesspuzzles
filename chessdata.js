@@ -47,7 +47,7 @@ async function getTopTenPositions(pgn, orientation, depth) {
         }
 
         // Sequential evaluation: one position at a time
-        for (let idx = 0; idx < positions.length; idx++) {
+        for (let idx = 4; idx < positions.length; idx++) {
             const pos = positions[idx];
             if (pos.turn != orientation) {
                 continue;

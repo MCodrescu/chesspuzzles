@@ -159,7 +159,7 @@ getRecentGamesButton.addEventListener('click', () => {
     playerGames = await getPlayerRecentGames(usernameTextInput.value, 3);
     await fillGameSelect(playerGames, gameSelect, loadGamesButton, gameFormatSelect.value);
     //await fillGameSelectDropdown(playerGames, gameSelectDropdown, loadGamesButton, gameFormatSelect.value);
-    var selectedGame = playerGames.find((game) => game.uuid === gameSelectDropdown.value);
+    var selectedGame = playerGames.find((game) => game.uuid === gameSelect.value);
     showGameDetails(selectedGame, gameDetailsText)
   })();
 })

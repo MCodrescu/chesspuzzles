@@ -196,6 +196,7 @@ export async function fillGameSelect(playerGames, gameSelectElement, loadGamesBu
 
         loadGamesButton.setAttribute("class", "btn btn-primary enabled");
         gameSelectElement.setAttribute("class", "form-select d-inline");
+        gameSelectElement.selectedIndex = 0;
 
         console.log("Player Games: ", playerGames);
 
