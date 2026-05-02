@@ -42,9 +42,9 @@
                     <li class="nav-item d-none">
                         <a class="nav-link active" aria-current="page" href="#">Home</a>
                     </li>
-                    <li class="nav-item d-none">
+                    <li class="nav-item">
                         <a class="nav-link active" type="button" data-bs-toggle="offcanvas"
-                            data-bs-target="#offcanvasExample" aria-controls="offcanvasExample"> Game Details
+                            data-bs-target="#offcanvasExample" aria-controls="offcanvasExample"> Settings
                         </a>
                     </li>
 
@@ -59,31 +59,13 @@
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
         <div class="offcanvas-body">
-            <p class="fs-4 fw-bold">Game Details</p>
+            <p class="fs-4 fw-bold">Settings</p>
             <form>
                 <div class="mb-3">
-                    <label for="chessUsernameOffConvas" class="form-label">Username</label>
-                    <input type="text" class="form-control" id="chessUsernameOffConvas" value="MCodrescu">
-                </div>
-                <div class="mb-3">
-                    <label for="year" class="form-label">Year</label>
-                    <input type="number" class="form-control" id="year" value="2026">
-                </div>
-                <div class="mb-3">
-                    <label for="month" class="form-label">Month</label>
-                    <input type="number" class="form-control" id="month" value="3">
-                </div>
-                <div class="mb-3">
-                    <label for="gameFormatOffCanvas" class="form-label">Game Format</label>
-                    <select class="form-select" id="gameFormatOffCanvas">
-                        <option value="blitz">Blitz</option>
-                        <option value="rapid">Rapid</option>
-                        <option value="daily">Daily</option>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label for="gameNumberOffCanvas" class="form-label">Game Number</label>
-                    <input type="number" class="form-control" id="gameNumberOffCanvas" value="10">
+                    <label for="chessUsernameOffConvas" class="form-label">Stockfish Depth</label>
+                    <input type="range" class="form-range" min="5" max="20" step="1" id="stockfishDepth" value = "10" 
+                    oninput="document.getElementById('stockfishDepthValue').textContent = this.value">
+                    <output for="stockfishDepth" id="stockfishDepthValue" aria-hidden="true">10</output>
                 </div>
                 <input type="button" class="btn btn-primary w-100 mt-3" data-bs-toggle="offcanvas" value="Submit">
                 <p class="pt-3" id="gameInfo"></p>

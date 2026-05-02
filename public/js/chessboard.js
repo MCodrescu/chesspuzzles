@@ -46,6 +46,7 @@ var loadGamesButton = document.querySelector('#generatePuzzleButton');
 var gameDetailsText = document.querySelector("#gameDetailsText");
 var gameFormatSelect = document.querySelector("#gameFormatSelect");
 var puzzlePagination = document.querySelector("#puzzlePagination");
+var stockfishDepthRange = document.querySelector("#stockfishDepth");
 
 // Puzzle correct or incorrect toast message
 function showEngineBestMoveToast(source, target) {
@@ -187,7 +188,7 @@ async function loadPuzzles(selectedGame, username) {
     console.log("Board Orientation: ", board_orientation);
 
     // Load top ten positions from that game
-    topPositions = await getTopTenGamePositions(selectedGame.pgn, board_orientation);
+    topPositions = await getTopTenGamePositions(selectedGame.pgn, board_orientation, stockfishDepthRange.value);
     console.log("Top Positions: ", topPositions);
 
     // Create the pagination elements
