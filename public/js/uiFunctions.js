@@ -153,7 +153,7 @@ export async function getPlayerRecentGames(username, n) {
 
     var playerGames = [];
     for (let i = 0; i < n * 12; i++) {
-        if (playerGames.length < 1) {
+        if (playerGames.length < 10) {
             playerGames = await getPlayerGames(username, yearMonthPairs[i].year, yearMonthPairs[i].month);
         } else {
             break;
