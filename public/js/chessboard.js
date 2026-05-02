@@ -43,12 +43,9 @@ var getRecentGamesButton = document.querySelector("#getRecentGamesButton");
 var gameSelect = document.querySelector("#gameSelect");
 var usernameTextInput = document.querySelector('#chessUsername');
 var loadGamesButton = document.querySelector('#generatePuzzleButton');
-var nextPuzzleButton = document.querySelector("#nextPuzzle");
-var chessUsername = document.querySelector("#chessUsername");
 var gameDetailsText = document.querySelector("#gameDetailsText");
 var gameFormatSelect = document.querySelector("#gameFormatSelect");
 var puzzlePagination = document.querySelector("#puzzlePagination");
-var gameSelectDropdown = document.querySelector("#gameSelectDropdown");
 
 // Puzzle correct or incorrect toast message
 function showEngineBestMoveToast(source, target) {
