@@ -24,9 +24,20 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+        .icon-light {
+            color: white;
+        }
+
+        .small-text {
+            font-size: 0.8em;
+        }
+    </style>
 </head>
 
-<body style="background-image: url('/img/app-background.jpeg'); background-size: cover; background-repeat: no-repeat; background-position: center;">
+<body
+    style="background-image: url('/img/app-background.jpeg'); background-size: cover; background-repeat: no-repeat; background-position: center;">
 
     <!--Navbar-->
     <nav class="navbar navbar-expand-lg bg-body-secondary bg-gradient">
@@ -63,8 +74,8 @@
             <form>
                 <div class="mb-3">
                     <label for="chessUsernameOffConvas" class="form-label">Stockfish Depth</label>
-                    <input type="range" class="form-range" min="5" max="20" step="1" id="stockfishDepth" value = "10" 
-                    oninput="document.getElementById('stockfishDepthValue').textContent = this.value">
+                    <input type="range" class="form-range" min="5" max="20" step="1" id="stockfishDepth" value="10"
+                        oninput="document.getElementById('stockfishDepthValue').textContent = this.value">
                     <output for="stockfishDepth" id="stockfishDepthValue" aria-hidden="true">10</output>
                 </div>
                 <input type="button" class="btn btn-primary w-100 mt-3" data-bs-toggle="offcanvas" value="Submit">
@@ -74,35 +85,46 @@
     </div>
 
     <!-- Main Container -->
-    <div class="container py-5 mb-5">
+    <div class="container pb-5 pt-4 mb-5 p-0">
         <div class="row justify-content-center">
             <div class="col-12 col-md-8">
-                <div class="container text-center">
-                    <div class="row pb-3">
+                <div class="container">
+                    <div class="row">
                         <div class="col">
-                            <div class="btn-group w-40 w-md-20" role="group" aria-label="Basic example">
-                                <button class="btn btn-outline-primary" data-bs-toggle="modal"
-                                    data-bs-target="#selectGameModal" type="button" id="loadGames">
-                                    Load Game
-                                </button>
-                                <button class="btn btn-outline-primary" type="button" id="seeContinuation">
-                                    See Continuation
-                                </button>
-                            </div>
-                            <div class="pt-3" id="lastMoveDetails">
-                                Generate a new puzzle.
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row justify-content-center">
-                        <div class="col-12 col-md-8 bg-white rounded-5 p-3 p-md-4 shadow justify-content-center">
-                            <nav aria-label="...">
+                            <div id="lastMoveDetails">
+                                Welcome! Click New to begin solving puzzles from your games!</div>
+                            <nav aria-label="..." class="d-md-inline d-none">
                                 <ul class="pagination text-center" id="puzzlePagination">
+                                    <li class="page-item"><a href="#" class = "page-link">...</a></li>
                                 </ul>
                             </nav>
-                            <div class="board board-large" id="board"></div>
                         </div>
-
+                    </div>
+                    <div class="row pt-4 justify-content-center">
+                        <div class="col-12 p-0 m-0 col-md-8 bg-white rounded-5 p-md-4 shadow justify-content-center">
+                            <div class="board board-large" id="board" style="width:100%;"></div>
+                        </div>
+                        <div class="col pt-5 pb-0">
+                            <div class="btn-group w-100 w-md-20" role="group" aria-label="Basic example">
+                                <button class="btn" data-bs-toggle="modal" data-bs-target="#selectGameModal"
+                                    type="button" id="loadGames">
+                                    <i class="fa-regular fa-plus fa-2xl icon-light"></i> <br><br>
+                                    <p class="icon-light small-text">New</p>
+                                </button>
+                                <button class="btn" type="button" id="seeContinuation">
+                                    <i class="fa-regular fa-lightbulb fa-2xl icon-light"></i> <br><br>
+                                    <p class="icon-light small-text">Solution</p>
+                                </button>
+                                <button class="btn" id="previousPuzzleArrowButton">
+                                    <i class="fa-regular fa-angle-left fa-2xl icon-light"></i> <br><br>
+                                    <p class="icon-light small-text">Back</p>
+                                </button>
+                                <button class="btn" id="nextPuzzleArrowButton">
+                                    <i class="fa-regular fa-angle-right fa-2xl icon-light"></i> <br><br>
+                                    <p class="icon-light small-text">Next</p>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -183,13 +205,14 @@
                             <input type="button" value="Get Recent Games" id="getRecentGamesButton"
                                 class="btn btn-outline-primary float-right">
                         </div>
-                        <div class = "mb-3">
+                        <div class="mb-3">
                             <div class="btn-group w-100 d-none">
-                                <button type="button" class="btn btn-white border dropdown-toggle" data-bs-toggle="dropdown"
-                                    aria-expanded="false">
+                                <button type="button" class="btn btn-white border dropdown-toggle"
+                                    data-bs-toggle="dropdown" aria-expanded="false">
                                     Select Game
                                 </button>
-                                <ul class="dropdown-menu w-100" id = "gameSelectDropdown" style="max-height: 50vh; overflow-y: auto;">
+                                <ul class="dropdown-menu w-100" id="gameSelectDropdown"
+                                    style="max-height: 50vh; overflow-y: auto;">
                                     <li><a class="dropdown-item" href="#">Action</a></li>
                                     <li><a class="dropdown-item" href="#">Another action</a></li>
                                     <li><a class="dropdown-item" href="#">Something else here</a></li>
@@ -219,8 +242,7 @@
 
     <!--Footer-->
     <footer class="bg-body-secondary fixed-bottom d-none d-md-inline pt-md-3 align-items-center">
-        <p class="ps-3 text-muted">Feedback: <a
-                href="https://github.com/MCodrescu/chesspuzzles">chesspuzzles</a></p>
+        <p class="ps-3 text-muted">Feedback: <a href="https://github.com/MCodrescu/chesspuzzles">chesspuzzles</a></p>
     </footer>
 
 
