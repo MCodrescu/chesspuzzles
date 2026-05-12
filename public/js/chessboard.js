@@ -310,3 +310,23 @@ seeContinuationButton.addEventListener('click', () => {
     board.setPosition(chess.fen(), true);
   }
 })
+
+// Next button sets up the next puzzle
+var nextPuzzleButton = document.querySelector("#nextPuzzleArrowButton");
+nextPuzzleButton.addEventListener('click', () => {
+  console.log("Next Puzzle Button Clicked. Current Puzzle Number: ", puzzle_number);
+  if (puzzle_number < 9) {
+    puzzle_number += 1;
+    loadPuzzleNumber(puzzle_number);
+  }
+})
+
+// Previous button sets up the previous puzzle
+var previousPuzzleButton = document.querySelector("#previousPuzzleArrowButton");
+previousPuzzleButton.addEventListener('click', () => {
+  console.log("Previous Puzzle Button Clicked. Current Puzzle Number: ", puzzle_number);
+  if (puzzle_number > 0) {
+    puzzle_number -= 1;
+    loadPuzzleNumber(puzzle_number);
+  }
+})
