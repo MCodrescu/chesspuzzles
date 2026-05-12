@@ -1,9 +1,9 @@
-import { INPUT_EVENT_TYPE, COLOR, Chessboard, BORDER_TYPE } from "../node_modules/cm-chessboard/src/Chessboard.js"
-import { MARKER_TYPE, Markers } from "../node_modules/cm-chessboard/src/extensions/markers/Markers.js"
-import { PROMOTION_DIALOG_RESULT_TYPE, PromotionDialog } from "../node_modules/cm-chessboard/src/extensions/promotion-dialog/PromotionDialog.js"
-import { Accessibility } from "../node_modules/cm-chessboard/src/extensions/accessibility/Accessibility.js"
+import { INPUT_EVENT_TYPE, COLOR, Chessboard, BORDER_TYPE } from "/node_modules/cm-chessboard/src/Chessboard.js"
+import { MARKER_TYPE, Markers } from "/node_modules/cm-chessboard/src/extensions/markers/Markers.js"
+import { PROMOTION_DIALOG_RESULT_TYPE, PromotionDialog } from "/node_modules/cm-chessboard/src/extensions/promotion-dialog/PromotionDialog.js"
+import { Accessibility } from "/node_modules/cm-chessboard/src/extensions/accessibility/Accessibility.js"
 import { Chess } from "https://cdn.jsdelivr.net/npm/chess.mjs@1/src/chess.mjs/Chess.js"
-import { RightClickAnnotator } from "../node_modules/cm-chessboard/src/extensions/right-click-annotator/RightClickAnnotator.js";
+import { RightClickAnnotator } from "/node_modules/cm-chessboard/src/extensions/right-click-annotator/RightClickAnnotator.js";
 
 // Import custom functions
 import {
