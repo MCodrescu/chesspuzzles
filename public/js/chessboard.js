@@ -1,9 +1,9 @@
-import { INPUT_EVENT_TYPE, COLOR, Chessboard, BORDER_TYPE } from "/node_modules/cm-chessboard/src/Chessboard.js"
-import { MARKER_TYPE, Markers } from "/node_modules/cm-chessboard/src/extensions/markers/Markers.js"
-import { PROMOTION_DIALOG_RESULT_TYPE, PromotionDialog } from "/node_modules/cm-chessboard/src/extensions/promotion-dialog/PromotionDialog.js"
-import { Accessibility } from "/node_modules/cm-chessboard/src/extensions/accessibility/Accessibility.js"
+import { INPUT_EVENT_TYPE, COLOR, Chessboard, BORDER_TYPE } from "https://cdn.jsdelivr.net/npm/cm-chessboard@8/src/Chessboard.js"
+import { MARKER_TYPE, Markers } from "https://cdn.jsdelivr.net/npm/cm-chessboard@8/src/extensions/markers/Markers.js"
+import { PROMOTION_DIALOG_RESULT_TYPE, PromotionDialog } from "https://cdn.jsdelivr.net/npm/cm-chessboard@8/src/extensions/promotion-dialog/PromotionDialog.js"
+import { Accessibility } from "https://cdn.jsdelivr.net/npm/cm-chessboard@8/src/extensions/accessibility/Accessibility.js"
 import { Chess } from "https://cdn.jsdelivr.net/npm/chess.mjs@1/src/chess.mjs/Chess.js"
-import { RightClickAnnotator } from "/node_modules/cm-chessboard/src/extensions/right-click-annotator/RightClickAnnotator.js";
+import { RightClickAnnotator } from "https://cdn.jsdelivr.net/npm/cm-chessboard@8/src/extensions/right-click-annotator/RightClickAnnotator.js";
 
 // Import custom functions
 import {
@@ -115,7 +115,7 @@ function inputHandler(event) {
 
 const board = new Chessboard(document.getElementById("board"), {
   position: chess.fen(),
-  assetsUrl: "../node_modules/cm-chessboard/assets/",
+  assetsUrl: "https://cdn.jsdelivr.net/npm/cm-chessboard@8/assets/",
   style: { borderType: BORDER_TYPE.none, pieces: { file: "pieces/staunty.svg" }, animationDuration: 1000 },
   extensions: [
     { class: Markers, props: { autoMarkers: MARKER_TYPE.square } },
