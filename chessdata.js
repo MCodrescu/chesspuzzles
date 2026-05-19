@@ -36,14 +36,14 @@ function parseGamePositions(pgn) {
         turn: chess.turn()
     });
 
-    for (let i = 0; i < moves.length; i++) {
+    for (const [i, move] of moves.entries()) {
         const fen_before = chess.fen();
-        const mv = chess.move(moves[i]);
+        const mv = chess.move(move);
         positions.push({
             move: i + 1,
             fen_before: fen_before,
             fen: chess.fen(),
-            san: moves[i],
+            san: move,
             coord: mv ? `${mv.from}-${mv.to}` : null,
             eval_change: null,
             current_eval: null,
@@ -167,8 +167,7 @@ async function getTopTenPositions(pgn, orientation, depth) {
     try {
         const positions = parseGamePositions(pgn);
 
-        for (let idx = 4; idx < positions.length; idx++) {
-            const pos = positions[idx];
+        for (const pos of positions.slice(4)) {
             if (pos.turn !== orientation) {
                 continue;
             }

@@ -49,13 +49,13 @@ app.get('/chesswebapi/gamefen/:username/:year/:month/:format/:gameuuid', (req, r
 
             // Find the game with the specified UUID and format, then extract its PGN
             var pgn;
-            try {
-                pgn = response.body.games.find(
-                    game => game.uuid === req.params.gameuuid && game.time_class === req.params.format
-                ).pgn;
-            } catch {
-                return;
+            const game = response.body.games?.find(
+                g => g.uuid === req.params.gameuuid && g.time_class === req.params.format
+            );
+            if (!game) {
+                return res.status(404).json({ error: 'Game not found' });
             }
+            const pgn = game.pgn;
 
             const chess = new Chess();
             chess.loadPgn(pgn);
@@ -75,7 +75,7 @@ app.get('/chesswebapi/gamefen/:username/:year/:month/:format/:gameuuid', (req, r
 
             // Make each move and record FEN
             moves.forEach((move, index) => {
-                mv = chess.move(move);
+                const mv = chess.move(move);
                 fenPositions.push({
                     move: index + 1,
                     fen: chess.fen(),
@@ -141,8 +141,8 @@ app.post('/stockfish/evaluationChange/', async (req, res) => {
 
             console.log("Eval Change calc bestline ", bestline);
 
-            for (let i = 0; i < bestline.length; i++) {
-                var mv = chessEval.move(bestline[i]);
+            for (const moveCoord of bestline) {
+                var mv = chessEval.move(moveCoord);
                 if (!mv) {
                     return res.status(400).json({ error: 'Invalid Coordinate move in Stockfish best line' });
                 }

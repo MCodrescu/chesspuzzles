@@ -1,3 +1,10 @@
+// Helper function
+function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+}
+
 /**
  * Retrieve basic player info
  * @param  {string} username The chess.com username.
@@ -60,7 +67,7 @@ export async function getStockfishBestMove(fen, depth) {
         })
         const stockfishData = await response.json();
         console.log('Stockfish Data: ', stockfishData);
-        var stockfishBestMove = stockfishData.bestmove.split(" ");
+        let stockfishBestMove = stockfishData.bestmove.split(" ");
         console.log('Stockfish Best Move Coord: ', stockfishBestMove);
         return stockfishBestMove[1];
     } catch (error) {
@@ -135,7 +142,7 @@ function getYearMonthPairsLastNYears(n) {
     const result = [];
     for (let i = 0; i < monthsToGenerate; i++) {
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        result.push({ year: d.getFullYear(), month: d.getMonth() + 1 });
+        result.push({ year: d.getFullYear(), month: String(d.getMonth() + 1).padStart(2, '0') });
     }
     return result;
 }
@@ -151,10 +158,10 @@ export async function getPlayerRecentGames(username, n) {
     // Get the year month pairs going back in time
     const yearMonthPairs = getYearMonthPairsLastNYears(n);
 
-    var playerGames = [];
-    for (let i = 0; i < n * 12; i++) {
+    let playerGames = [];
+    for (const { year, month } of yearMonthPairs) {
         if (playerGames.length < 10) {
-            playerGames = await getPlayerGames(username, yearMonthPairs[i].year, yearMonthPairs[i].month);
+            playerGames = await getPlayerGames(username, year, month);
         } else {
             break;
         }
@@ -177,20 +184,20 @@ export async function fillGameSelect(playerGames, gameSelectElement, loadGamesBu
         gameSelectElement.replaceChildren();
 
         // Fill the select
-        for (let i = 0; i < playerGames.length; i++) {
+        for (const game of playerGames) {
 
             // Don't add the game if it's not the correct time control
             if (gameFormat != "all") {
-                if (playerGames[i].time_class != gameFormat) {
+                if (game.time_class != gameFormat) {
                     continue;
                 }
             }
 
-            var selectOption = document.createElement("option");
-            selectOption.value = playerGames[i].uuid;
+            let selectOption = document.createElement("option");
+            selectOption.value = game.uuid;
             selectOption.innerText = `
-                White: ${playerGames[i].white.username} (${playerGames[i].white.rating}) 
-                v. Black: ${playerGames[i].black.username} (${playerGames[i].black.rating})
+                White: ${game.white.username} (${game.white.rating}) 
+                v. Black: ${game.black.username} (${game.black.rating})
             `
             gameSelectElement.prepend(selectOption);
         }
@@ -223,52 +230,52 @@ export async function fillGameSelectDropdown(playerGames, gameSelectDropdownElem
         gameSelectDropdownElement.replaceChildren();
 
         // Fill the select
-        for (let i = 0; i < playerGames.length; i++) {
+        for (const game of playerGames) {
 
             // Don't add the game if it's not the correct time control
             if (gameFormat != "all") {
-                if (playerGames[i].time_class != gameFormat) {
+                if (game.time_class != gameFormat) {
                     continue;
                 }
             }
-            var listElement = document.createElement("li");
-            var linkElement = document.createElement("a");
+            let listElement = document.createElement("li");
+            let linkElement = document.createElement("a");
             linkElement.setAttribute("class", "dropdown-item");
-            linkElement.value = playerGames[i].uuid;
+            linkElement.value = game.uuid;
 
-            var opening = playerGames[i].eco.replace(/\/+$/, '').split('/').pop().replace(/-/g, ' ')
-            var timeClass = playerGames[i].time_class;
-            var white = playerGames[i].white.username;
-            var whiteRating = playerGames[i].white.rating;
-            var whiteResult = playerGames[i].white.result;
-            var black = playerGames[i].black.username;
-            var blackRating = playerGames[i].black.rating;
-            var blackResult = playerGames[i].black.result;
+            let opening = game.eco.replace(/\/+$/, '').split('/').pop().replaceAll(/-/g, ' ')
+            let timeClass = game.time_class;
+            let white = game.white.username;
+            let whiteRating = game.white.rating;
+            let whiteResult = game.white.result;
+            let black = game.black.username;
+            let blackRating = game.black.rating;
+            let blackResult = game.black.result;
             linkElement.innerHTML = `
-                <strong>Opening</strong> ${opening} <br>
-                <strong>Format</strong>: ${timeClass} <br><br>
-                <strong>Black</strong>: ${black}
+                <strong>Opening</strong> ${escapeHtml(opening)} <br>
+                <strong>Format</strong>: ${escapeHtml(timeClass)} <br><br>
+                <strong>Black</strong>: ${escapeHtml(black)}
                 <ul>
-                    <li><strong>Result</strong>: ${blackResult}</li>
-                    <li><strong>Rating</strong>: ${blackRating}</li>
+                    <li><strong>Result</strong>: ${escapeHtml(blackResult)}</li>
+                    <li><strong>Rating</strong>: ${escapeHtml(blackRating)}</li>
                 </ul>
-                <strong>White</strong>: ${white}
+                <strong>White</strong>: ${escapeHtml(white)}
                 <ul>
-                    <li><strong>Result</strong>: ${whiteResult}</li>
-                    <li><strong>Rating</strong>: ${whiteRating}</li>
+                    <li><strong>Result</strong>: ${escapeHtml(whiteResult)}</li>
+                    <li><strong>Rating</strong>: ${escapeHtml(whiteRating)}</li>
                 </ul>
             `
             listElement.appendChild(linkElement);
 
             // Add the game details and a divider
             gameSelectDropdownElement.prepend(listElement);
-            var divider = document.createElement("li");
+            let divider = document.createElement("li");
             divider.innerHTML = '<hr class="dropdown-divider">';
             gameSelectDropdownElement.prepend(divider);
         }
 
         loadGamesButton.setAttribute("class", "btn btn-primary enabled");
-        gameSelectElement.setAttribute("class", "form-select d-inline");
+        gameSelectDropdownElement.setAttribute("class", "form-select d-inline");
 
         console.log("Player Games: ", playerGames);
 

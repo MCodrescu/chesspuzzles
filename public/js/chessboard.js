@@ -169,6 +169,7 @@ gameSelect.addEventListener('change', () => {
 })
 
 async function loadPuzzles(selectedGame, username) {
+  puzzle_number = 0;
   try {
 
     // Get basic player info
@@ -243,7 +244,7 @@ async function loadPuzzles(selectedGame, username) {
 loadGamesButton.addEventListener('click', function () {
     var selectedGame = playerGames.find((game) => game.uuid === gameSelect.value);
     console.log("Selected Game: ", selectedGame);
-    loadPuzzles(selectedGame, chessUsername.value);
+    loadPuzzles(selectedGame, usernameTextInput.value);
 })
 
 /**
@@ -297,6 +298,7 @@ async function loadPuzzleNumber(puzzleNumber) {
 // On button click, show the continuation
 var seeContinuationButton = document.querySelector("#seeContinuation");
 seeContinuationButton.addEventListener('click', () => {
+  if (!topPosition) return;
 
   // Reset if changed
   chess.load(topPosition.fen_before);
@@ -305,8 +307,8 @@ seeContinuationButton.addEventListener('click', () => {
   board.setPosition(chess.fen(), true);
 
   // Animate through the best line
-  for (let i = 0; i < topPosition.bestline.length; i++) {
-    chess.move({ from: topPosition.bestline[i].slice(0, 2), to: topPosition.bestline[i].slice(2, 4) });
+  for (const move of topPosition.bestline) {
+    chess.move({ from: move.slice(0, 2), to: move.slice(2, 4) });
     board.setPosition(chess.fen(), true);
   }
 })
