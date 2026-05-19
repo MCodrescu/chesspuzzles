@@ -139,6 +139,7 @@ async function evaluatePosition(fen, orientation, depth) {
  * Only includes positions where:
  * - The eval after the best move is winning for the given orientation.
  * - The eval change is at least 10 centipawns in favor of the player.
+ * - The player did not already play the Stockfish best move (no puzzle needed).
  * @param {array} positions All position objects.
  * @param {string} orientation 'w' or 'b'.
  * @param {number} topN Number of top positions to return.
@@ -149,6 +150,7 @@ function rankPositions(positions, orientation, topN) {
         .filter(p => typeof p.eval_change === 'number' && !Number.isNaN(p.eval_change))
         .filter(p => orientation === 'w' ? p.eval_after > 0 : p.eval_after < 0)
         .filter(p => p.eval_change >= 10)
+        .filter(p => p.coord && p.bestline?.[0] && p.coord.replace('-', '') !== p.bestline[0])
         .sort((a, b) => b.eval_change - a.eval_change)
         .slice(0, topN);
 }
