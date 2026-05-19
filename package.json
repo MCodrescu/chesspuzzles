@@ -20,20 +20,17 @@
     "build": "babel main.js -d dist"
   },
   "dependencies": {
-    "bootstrap": "^5.3.8",
     "chess-web-api": "^1.2.0",
     "chess.js": "^1.4.0",
-    "cm-chessboard": "^8.12.7",
     "dotenv": "^17.4.1",
-    "eslint": "^10.2.1",
     "express": "^5.2.1",
-    "jquery": "^4.0.0",
-    "prettier": "^3.8.3",
     "stockfish": "^18.0.7"
   },
   "devDependencies": {
     "@babel/cli": "^7.28.6",
     "@babel/core": "^7.29.0",
-    "@babel/preset-env": "^7.29.2"
+    "@babel/preset-env": "^7.29.2",
+    "eslint": "^10.2.1",
+    "prettier": "^3.8.3"
   }
 }

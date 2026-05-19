@@ -8,13 +8,11 @@ import { RightClickAnnotator } from "https://cdn.jsdelivr.net/npm/cm-chessboard@
 // Import custom functions
 import {
   getTopTenGamePositions,
-  getStockfishBestMove,
   convertCoordToSan,
   getBasicPlayerInfo,
   fillGameSelect,
-  fillGameSelectDropdown,
   getPlayerRecentGames
-} from "./uiFunctions.js";
+} from "./api.js";
 
 // Initialize values
 var stockfishBestMoveCoord;
@@ -156,7 +154,6 @@ getRecentGamesButton.addEventListener('click', () => {
   (async () => {
     playerGames = await getPlayerRecentGames(usernameTextInput.value, 3);
     await fillGameSelect(playerGames, gameSelect, loadGamesButton, gameFormatSelect.value);
-    //await fillGameSelectDropdown(playerGames, gameSelectDropdown, loadGamesButton, gameFormatSelect.value);
     var selectedGame = playerGames.find((game) => game.uuid === gameSelect.value);
     showGameDetails(selectedGame, gameDetailsText)
   })();

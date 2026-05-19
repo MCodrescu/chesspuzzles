@@ -5,8 +5,8 @@ const { Chess } = require('chess.js');
 require('dotenv').config();
 
 // Import custom
-const { getStockfishBestMove } = require('./engine');
-const { getTopTenPositions } = require('./chessdata');
+const { getStockfishBestMove } = require('./src/engine');
+const { getTopTenPositions } = require('./src/chessdata');
 
 const app = express();
 const chessAPI = new ChessWebAPI();
@@ -48,7 +48,6 @@ app.get('/chesswebapi/gamefen/:username/:year/:month/:format/:gameuuid', (req, r
         .then(function (response) {
 
             // Find the game with the specified UUID and format, then extract its PGN
-            var pgn;
             const game = response.body.games?.find(
                 g => g.uuid === req.params.gameuuid && g.time_class === req.params.format
             );
