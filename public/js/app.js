@@ -151,6 +151,10 @@ function showGameDetails(selectedGame, gameDetailsText) {
 
 // Load the recent games
 getRecentGamesButton.addEventListener('click', () => {
+  if (!usernameTextInput.value.trim()) {
+    alert('Please enter a chess.com username.');
+    return;
+  }
   (async () => {
     playerGames = await getPlayerRecentGames(usernameTextInput.value, 3);
     await fillGameSelect(playerGames, gameSelect, loadGamesButton, gameFormatSelect.value);
@@ -308,6 +312,13 @@ seeContinuationButton.addEventListener('click', () => {
     chess.move({ from: move.slice(0, 2), to: move.slice(2, 4) });
     board.setPosition(chess.fen(), true);
   }
+})
+
+// Retry button resets the current puzzle to its starting position
+const retryPuzzleButton = document.querySelector("#retryPuzzleButton");
+retryPuzzleButton.addEventListener('click', () => {
+  if (!topPosition) return;
+  loadPuzzleNumber(puzzle_number);
 })
 
 // Next button sets up the next puzzle

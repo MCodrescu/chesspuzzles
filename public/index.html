@@ -114,6 +114,10 @@
                                     <i class="fa-regular fa-lightbulb fa-2xl icon-light"></i> <br><br>
                                     <p class="icon-light small-text">Solution</p>
                                 </button>
+                                <button class="btn" type="button" id="retryPuzzleButton">
+                                    <i class="fa-regular fa-rotate-right fa-2xl icon-light"></i> <br><br>
+                                    <p class="icon-light small-text">Retry</p>
+                                </button>
                                 <button class="btn" id="previousPuzzleArrowButton">
                                     <i class="fa-regular fa-angle-left fa-2xl icon-light"></i> <br><br>
                                     <p class="icon-light small-text">Back</p>
@@ -188,7 +192,7 @@
                     <form>
                         <div class="mb-3">
                             <label for="chessUsername" class="form-label">Username (chess.com)</label>
-                            <input type="text" class="form-control" id="chessUsername" placeholder="MCodrescu">
+                            <input type="text" class="form-control" id="chessUsername" placeholder="MCodrescu" required>
                         </div>
                         <div class="mb-3">
                             <label for="gameFormatSelect" class="form-label">Format</label>
