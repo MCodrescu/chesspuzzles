@@ -7,6 +7,7 @@ require('dotenv').config();
 // Import custom
 const { getStockfishBestMove } = require('./src/engine');
 const { getTopTenPositions } = require('./src/chessdata');
+const { savePuzzlePositions } = require('./src/db');
 
 const app = express();
 const chessAPI = new ChessWebAPI();
@@ -170,7 +171,11 @@ app.post('/stockfish/evaluationChange/', async (req, res) => {
 
 app.post('/stockfish/topTenPositions/', async (req, res) => {
   try {
-    const data = await getTopTenPositions(req.body.pgn, req.body.orientation, req.body.depth);
+    const { pgn, orientation, depth, username, game_uuid } = req.body;
+    const data = await getTopTenPositions(pgn, orientation, depth);
+    if (data.length > 0) {
+        await savePuzzlePositions(username, game_uuid, orientation, data);
+    }
     res.json({ topPositions: data });
   } catch (err) {
     res.status(500).json({ error: err.toString() });

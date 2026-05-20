@@ -81,9 +81,11 @@ export async function getStockfishBestMove(fen, depth) {
  * @param  {string} gamePGN The PGN of the game.
  * @param  {string} orientation Which side, white or black, should we evaluate for?
  * @param  {int} depth The stockfish calculation depth.
+ * @param  {string} username The chess.com username.
+ * @param  {string} gameUuid The chess.com game UUID.
  * @return {array}     The array of the top ten positions.
  */
-export async function getTopTenGamePositions(gamePGN, orientation, depth) {
+export async function getTopTenGamePositions(gamePGN, orientation, depth, username, gameUuid) {
     try {
         const response = await fetch(
             '/stockfish/topTenPositions/', {
@@ -91,7 +93,7 @@ export async function getTopTenGamePositions(gamePGN, orientation, depth) {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ pgn: gamePGN, orientation: orientation, depth: depth })
+            body: JSON.stringify({ pgn: gamePGN, orientation: orientation, depth: depth, username: username, game_uuid: gameUuid })
         })
         const topTenPositions = await response.json();
         console.log('Top Ten Game Positions: ', topTenPositions);

@@ -190,7 +190,7 @@ async function loadPuzzles(selectedGame, username) {
     console.log("Board Orientation: ", board_orientation);
 
     // Load top ten positions from that game
-    topPositions = await getTopTenGamePositions(selectedGame.pgn, board_orientation, stockfishDepthRange.value);
+    topPositions = await getTopTenGamePositions(selectedGame.pgn, board_orientation, stockfishDepthRange.value, username, selectedGame.uuid);
     console.log("Top Positions: ", topPositions);
 
     // Create the pagination elements
