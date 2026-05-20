@@ -222,7 +222,7 @@ async function loadPuzzles(selectedGame, username) {
     board.setPosition(chess.fen(), true);
 
     // show informational Toast
-    infoToastBody.innerHTML = `Best Move Eval Change: ${topPosition.eval_change}`;
+    infoToastBody.innerHTML = `You chose <strong>${topPosition.san}</strong> in this position. Find the right move to gain a <strong>+${(topPosition.eval_change / 100).toFixed(2)}</strong> advantage.`;
     toastBootstrapInfo.show();
 
     // Get stockfish best move
@@ -270,7 +270,7 @@ async function loadPuzzleNumber(puzzleNumber) {
     stockfishBestMoveCoord = topPosition.bestline.slice(0, 4)[0];
 
     // show informational Toast
-    infoToastBody.innerHTML = `Best Move Eval Change: ${topPosition.eval_change}`;
+    infoToastBody.innerHTML = `You chose <strong>${topPosition.san}</strong> in this position. Find the right move to gain a <strong>+${(topPosition.eval_change / 100).toFixed(2)}</strong> advantage.`;
     toastBootstrapInfo.show();
 
     // Update the board and show the last move made before the position
