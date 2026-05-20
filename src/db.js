@@ -105,4 +105,47 @@ async function savePuzzlePositions(username, gameUuid, orientation, positions) {
     }
 }
 
+/**
+ * Returns the number of stored puzzle positions for a user.
+ * @param {string} username
+ * @returns {Promise<number>}
+ */
+async function getUserPuzzleCount(username) {
+    const result = await pool.query(
+        'SELECT COUNT(*) FROM puzzle_positions WHERE username = $1',
+        [username]
+    );
+    return parseInt(result.rows[0].count, 10);
+}
+
+/**
+ * Returns a Set of game UUIDs that have already been analysed for a user.
+ * @param {string} username
+ * @returns {Promise<Set<string>>}
+ */
+async function getAnalyzedGameUuids(username) {
+    const result = await pool.query(
+        'SELECT DISTINCT game_uuid FROM puzzle_positions WHERE username = $1',
+        [username]
+    );
+    return new Set(result.rows.map((row) => row.game_uuid));
+}
+
+/**
+ * Returns up to `limit` puzzle positions for a user, unsolved first.
+ * @param {string} username
+ * @param {number} [limit=10]
+ * @returns {Promise<object[]>}
+ */
+async function getUserPuzzles(username, limit = 10) {
+    const result = await pool.query(
+        `SELECT * FROM puzzle_positions
+         WHERE username = $1
+         ORDER BY solved ASC, RANDOM()
+         LIMIT $2`,
+        [username, limit]
+    );
+    return result.rows;
+}
+
 module.exports = { pool, initializeDatabase, getUserPuzzleCount, getAnalyzedGameUuids, getUserPuzzles, savePuzzlePositions };
