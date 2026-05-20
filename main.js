@@ -20,10 +20,15 @@ app.use(express.static(__dirname));
 const port = process.env.PORT;
 
 async function startServer() {
-    await initializeDatabase();
-    app.listen(port, () => {
-        console.log(`Server is running on port ${port}`);
-    });
+    await new Promise(resolve => app.listen(port, resolve));
+    console.log(`Server is running on port ${port}`);
+
+    try {
+        await initializeDatabase();
+    } catch (err) {
+        console.error('Database initialization failed:', err.message);
+        // Non-fatal: server stays up, DB-dependent routes will return errors
+    }
 }
 
 startServer().catch(err => {
