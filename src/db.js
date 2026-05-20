@@ -9,7 +9,50 @@ pool.on('error', (err) => {
 });
 
 /**
- * Persist an array of top puzzle positions for a given game to the database.
+ * Create the puzzle_positions table and its indexes if they do not already
+ * exist. Safe to call on every startup — all statements are idempotent.
+ * @returns {Promise<void>}
+ */
+async function initializeDatabase() {
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS puzzle_positions (
+            id              SERIAL          PRIMARY KEY,
+            username        VARCHAR(50)     NOT NULL,
+            game_uuid       VARCHAR(100)    NOT NULL,
+            orientation     CHAR(1)         NOT NULL CHECK (orientation IN ('w', 'b')),
+            move_number     INTEGER         NOT NULL,
+            san             VARCHAR(10)     NOT NULL,
+            coord           VARCHAR(10)     NOT NULL,
+            fen_before      TEXT            NOT NULL,
+            fen             TEXT            NOT NULL,
+            current_eval    INTEGER         NOT NULL,
+            eval_after      INTEGER         NOT NULL,
+            eval_change     INTEGER         NOT NULL,
+            bestline        TEXT[]          NOT NULL,
+            solved          BOOLEAN         NOT NULL DEFAULT FALSE,
+            created_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW()
+        )
+    `);
+
+    await pool.query(`
+        CREATE INDEX IF NOT EXISTS idx_puzzle_positions_username
+            ON puzzle_positions (username)
+    `);
+
+    await pool.query(`
+        CREATE INDEX IF NOT EXISTS idx_puzzle_positions_username_solved
+            ON puzzle_positions (username, solved)
+    `);
+
+    await pool.query(`
+        CREATE UNIQUE INDEX IF NOT EXISTS uq_puzzle_position
+            ON puzzle_positions (game_uuid, move_number, orientation)
+    `);
+
+    console.log('Database initialized.');
+}
+
+
  * Runs inside a transaction; skips positions that already exist for the same
  * game, move, and orientation (ON CONFLICT DO NOTHING).
  * @param {string} username - The chess.com username.
@@ -56,4 +99,4 @@ async function savePuzzlePositions(username, gameUuid, orientation, positions) {
     }
 }
 
-module.exports = { pool, savePuzzlePositions };
+module.exports = { pool, initializeDatabase, savePuzzlePositions };

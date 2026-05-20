@@ -7,7 +7,7 @@ require('dotenv').config();
 // Import custom
 const { getStockfishBestMove } = require('./src/engine');
 const { getTopTenPositions } = require('./src/chessdata');
-const { savePuzzlePositions } = require('./src/db');
+const { savePuzzlePositions, initializeDatabase } = require('./src/db');
 
 const app = express();
 const chessAPI = new ChessWebAPI();
@@ -18,8 +18,16 @@ app.use(express.static(__dirname));
 
 const port = process.env.PORT;
 
-app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+async function startServer() {
+    await initializeDatabase();
+    app.listen(port, () => {
+        console.log(`Server is running on port ${port}`);
+    });
+}
+
+startServer().catch(err => {
+    console.error('Failed to start server:', err);
+    process.exit(1);
 });
 
 // Get basic player information based on username
