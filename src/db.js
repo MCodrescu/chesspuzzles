@@ -4,11 +4,23 @@ if (!process.env.DATABASE_URL) {
     console.warn('WARNING: DATABASE_URL is not set. Database operations will fail.');
 }
 
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    connectionTimeoutMillis: 5000,
-    ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
-});
+// Parse the connection string into individual options so the programmatic
+// ssl config is not overridden by sslmode params embedded in the URL.
+function buildPoolConfig(databaseUrl) {
+    if (!databaseUrl) return {};
+    const u = new URL(databaseUrl);
+    return {
+        host: u.hostname,
+        port: u.port ? parseInt(u.port, 10) : 5432,
+        database: u.pathname.slice(1),
+        user: u.username,
+        password: u.password,
+        ssl: { rejectUnauthorized: false },
+        connectionTimeoutMillis: 5000,
+    };
+}
+
+const pool = new Pool(buildPoolConfig(process.env.DATABASE_URL));
 
 pool.on('error', (err) => {
     console.error('Unexpected database pool error:', err);

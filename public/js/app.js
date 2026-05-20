@@ -12,8 +12,9 @@ import {
   getBasicPlayerInfo,
   fillGameSelect,
   getPlayerRecentGames,
-  triggerUserAnalysis,
-  getUserPuzzlesFromDb
+  // DB persistence disabled — re-enable when ready:
+  // triggerUserAnalysis,
+  // getUserPuzzlesFromDb
 } from "./api.js";
 
 // Initialize values
@@ -159,8 +160,8 @@ getRecentGamesButton.addEventListener('click', () => {
   }
   (async () => {
     const username = usernameTextInput.value.trim();
-    // Fire background analysis without blocking the UI
-    triggerUserAnalysis(username);
+    // DB persistence disabled — re-enable when ready:
+    // triggerUserAnalysis(username);
     playerGames = await getPlayerRecentGames(username, 3);
     await fillGameSelect(playerGames, gameSelect, loadGamesButton, gameFormatSelect.value);
     var selectedGame = playerGames.find((game) => game.uuid === gameSelect.value);
@@ -239,19 +240,23 @@ async function setupBoard(positions, rawOrientation) {
   await loadPuzzleNumber(0);
 }
 
-// Generate puzzles: load from DB first, fall back to on-demand for selected game
-loadGamesButton.addEventListener('click', async function () {
+// Generate puzzles: on-demand from selected game
+// DB-first loading disabled — re-enable when ready:
+// loadGamesButton.addEventListener('click', async function () {
+//     const username = usernameTextInput.value.trim();
+//     const dbPuzzles = await getUserPuzzlesFromDb(username);
+//     if (dbPuzzles && dbPuzzles.length > 0) {
+//         await setupBoard(dbPuzzles, dbPuzzles[0].orientation);
+//     } else {
+//         const selectedGame = playerGames.find((game) => game.uuid === gameSelect.value);
+//         loadPuzzles(selectedGame, username);
+//     }
+// })
+loadGamesButton.addEventListener('click', function () {
+    const selectedGame = playerGames.find((game) => game.uuid === gameSelect.value);
     const username = usernameTextInput.value.trim();
-    const dbPuzzles = await getUserPuzzlesFromDb(username);
-
-    if (dbPuzzles && dbPuzzles.length > 0) {
-        await setupBoard(dbPuzzles, dbPuzzles[0].orientation);
-    } else {
-        // DB not populated yet — fall back to on-demand generation
-        const selectedGame = playerGames.find((game) => game.uuid === gameSelect.value);
-        console.log("Selected Game (fallback): ", selectedGame);
-        loadPuzzles(selectedGame, username);
-    }
+    console.log("Selected Game: ", selectedGame);
+    loadPuzzles(selectedGame, username);
 })
 
 /**

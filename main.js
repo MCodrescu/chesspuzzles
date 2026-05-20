@@ -7,8 +7,9 @@ require('dotenv').config();
 // Import custom
 const { getStockfishBestMove } = require('./src/engine');
 const { getTopTenPositions } = require('./src/chessdata');
-const { savePuzzlePositions, initializeDatabase, getUserPuzzles } = require('./src/db');
-const { buildUserBacklog } = require('./src/backgroundJobs');
+// DB persistence disabled — re-enable when ready:
+// const { savePuzzlePositions, initializeDatabase, getUserPuzzles } = require('./src/db');
+// const { buildUserBacklog } = require('./src/backgroundJobs');
 
 const app = express();
 const chessAPI = new ChessWebAPI();
@@ -23,12 +24,12 @@ async function startServer() {
     await new Promise(resolve => app.listen(port, resolve));
     console.log(`Server is running on port ${port}`);
 
-    try {
-        await initializeDatabase();
-    } catch (err) {
-        console.error('Database initialization failed:', err.message);
-        // Non-fatal: server stays up, DB-dependent routes will return errors
-    }
+    // DB persistence disabled — re-enable when ready:
+    // try {
+    //     await initializeDatabase();
+    // } catch (err) {
+    //     console.error('Database initialization failed:', err.message);
+    // }
 }
 
 startServer().catch(err => {
@@ -185,30 +186,31 @@ app.post('/stockfish/evaluationChange/', async (req, res) => {
 
 app.post('/stockfish/topTenPositions/', async (req, res) => {
   try {
-    const { pgn, orientation, depth, username, game_uuid } = req.body;
+    const { pgn, orientation, depth } = req.body;
     const data = await getTopTenPositions(pgn, orientation, depth);
-    if (data.length > 0) {
-        await savePuzzlePositions(username, game_uuid, orientation, data);
-    }
+    // DB persistence disabled — re-enable when ready:
+    // if (data.length > 0) {
+    //     const { username, game_uuid } = req.body;
+    //     await savePuzzlePositions(username, game_uuid, orientation, data);
+    // }
     res.json({ topPositions: data });
   } catch (err) {
     res.status(500).json({ error: err.toString() });
   }
 });
 
-// Trigger async backlog analysis for a user — returns immediately (202)
-app.post('/user/analyze/:username', (req, res) => {
-    buildUserBacklog(req.params.username); // fire and forget
-    res.status(202).json({ message: 'Analysis started' });
-});
-
-// Return up to 10 puzzle positions for a user, unsolved first
-app.get('/user/puzzles/:username', async (req, res) => {
-    try {
-        const puzzles = await getUserPuzzles(req.params.username);
-        res.json({ puzzles });
-    } catch (err) {
-        res.status(500).json({ error: err.toString() });
-    }
-});
+// DB persistence disabled — re-enable when ready:
+// app.post('/user/analyze/:username', (req, res) => {
+//     buildUserBacklog(req.params.username);
+//     res.status(202).json({ message: 'Analysis started' });
+// });
+//
+// app.get('/user/puzzles/:username', async (req, res) => {
+//     try {
+//         const puzzles = await getUserPuzzles(req.params.username);
+//         res.json({ puzzles });
+//     } catch (err) {
+//         res.status(500).json({ error: err.toString() });
+//     }
+// });
 
