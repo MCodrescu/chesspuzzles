@@ -52,7 +52,7 @@ async function initializeDatabase() {
     console.log('Database initialized.');
 }
 
-
+/** 
  * Runs inside a transaction; skips positions that already exist for the same
  * game, move, and orientation (ON CONFLICT DO NOTHING).
  * @param {string} username - The chess.com username.
