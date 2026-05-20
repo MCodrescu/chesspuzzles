@@ -11,7 +11,9 @@ import {
   convertCoordToSan,
   getBasicPlayerInfo,
   fillGameSelect,
-  getPlayerRecentGames
+  getPlayerRecentGames,
+  triggerUserAnalysis,
+  getUserPuzzlesFromDb
 } from "./api.js";
 
 // Initialize values
@@ -149,14 +151,17 @@ function showGameDetails(selectedGame, gameDetailsText) {
       `
 }
 
-// Load the recent games
+// Load the recent games and kick off background analysis
 getRecentGamesButton.addEventListener('click', () => {
   if (!usernameTextInput.value.trim()) {
     alert('Please enter a chess.com username.');
     return;
   }
   (async () => {
-    playerGames = await getPlayerRecentGames(usernameTextInput.value, 3);
+    const username = usernameTextInput.value.trim();
+    // Fire background analysis without blocking the UI
+    triggerUserAnalysis(username);
+    playerGames = await getPlayerRecentGames(username, 3);
     await fillGameSelect(playerGames, gameSelect, loadGamesButton, gameFormatSelect.value);
     var selectedGame = playerGames.find((game) => game.uuid === gameSelect.value);
     showGameDetails(selectedGame, gameDetailsText)
@@ -185,67 +190,68 @@ async function loadPuzzles(selectedGame, username) {
     infoToastBody.innerHTML = "Processing positions ...";
     toastBootstrapInfo.show();
 
-    // Get the correct board orientation.
-    board_orientation = selectedGame.white.username === `${username}` ? COLOR.white : COLOR.black;
-    console.log("Board Orientation: ", board_orientation);
+    // Determine raw orientation ('w'/'b') then derive board colour
+    const rawOrientation = selectedGame.white.username.toLowerCase() === username.toLowerCase() ? 'w' : 'b';
 
     // Load top ten positions from that game
-    topPositions = await getTopTenGamePositions(selectedGame.pgn, board_orientation, stockfishDepthRange.value, username, selectedGame.uuid);
+    topPositions = await getTopTenGamePositions(selectedGame.pgn, rawOrientation, stockfishDepthRange.value, username, selectedGame.uuid);
     console.log("Top Positions: ", topPositions);
 
-    // Create the pagination elements
-    puzzlePagination.replaceChildren();
-    for (let i = 0; i < topPositions.length; i++) {
-      var linkElement = document.createElement("a");
-      var listElement = document.createElement("li");
-      linkElement.setAttribute("class", "page-link");
-      linkElement.innerHTML = i + 1;
-      linkElement.onclick = () => loadPuzzleNumber(i);
-      listElement.setAttribute("class", "page-item");
-      if (i == 0) {
-        listElement.setAttribute("class", "page-item active");
-      }
-      listElement.appendChild(linkElement);
-      puzzlePagination.appendChild(listElement);
-    }
-
-    topPosition = topPositions[puzzle_number];
-    console.log("Top Position: ", topPosition);
-
-    // Update the board and show the last move made before the position
-    chess.load(topPosition.fen_before);
-    board.setOrientation(board_orientation);
-    board.disableMoveInput();
-    board.enableMoveInput(inputHandler, board_orientation);
-    board.setPosition(topPosition.fen_before, true);
-    chess.move({ from: topPosition.coord.slice(0, 2), to: topPosition.coord.slice(3, 5) });
-    board.setPosition(chess.fen(), true);
-
-    // show informational Toast
-    infoToastBody.innerHTML = `You chose <strong>${topPosition.san}</strong> in this position. Find the right move to gain a <strong>+${(topPosition.eval_change / 100).toFixed(2)}</strong> advantage.`;
-    toastBootstrapInfo.show();
-
-    // Get stockfish best move
-    stockfishBestMoveCoord = topPosition.bestline[0];
-
-    // Convert Stockfish's best move from coordinate format to SAN format for display in the toast message
-    stockfishBestMoveSAN = await convertCoordToSan(topPosition.bestline[0], topPosition.fen);
-
-    // show game info
-    lastMoveDetails.innerHTML = `
-        <strong>${board_orientation === COLOR.white ? 'White to Move' : 'Black to Move'}</strong>:
-        Last Move: ${topPosition.san}
-      `;
+    await setupBoard(topPositions, rawOrientation);
   } catch (error) {
     console.log("Error in loading puzzles: ", error);
   }
 }
 
-// Generate top ten puzzles
-loadGamesButton.addEventListener('click', function () {
-    var selectedGame = playerGames.find((game) => game.uuid === gameSelect.value);
-    console.log("Selected Game: ", selectedGame);
-    loadPuzzles(selectedGame, usernameTextInput.value);
+/**
+ * Shared board-setup routine used by both the on-demand and DB-backed paths.
+ * Sets global board_orientation and topPositions, builds pagination,
+ * then loads puzzle 0.
+ * @param {object[]} positions Array of puzzle position objects.
+ * @param {string} rawOrientation 'w' or 'b'.
+ */
+async function setupBoard(positions, rawOrientation) {
+  puzzle_number = 0;
+  topPositions = positions;
+  board_orientation = rawOrientation === 'w' ? COLOR.white : COLOR.black;
+
+  toastBootstrapCorrect.hide();
+  toastBootstrapIncorrect.hide();
+
+  // Build pagination
+  puzzlePagination.replaceChildren();
+  puzzlePagination.parentElement.classList.remove('d-none');
+  for (let i = 0; i < topPositions.length; i++) {
+    const linkElement = document.createElement("a");
+    const listElement = document.createElement("li");
+    linkElement.setAttribute("class", "page-link");
+    linkElement.innerHTML = i + 1;
+    linkElement.onclick = () => loadPuzzleNumber(i);
+    listElement.setAttribute("class", i === 0 ? "page-item active" : "page-item");
+    listElement.appendChild(linkElement);
+    puzzlePagination.appendChild(listElement);
+  }
+
+  board.setOrientation(board_orientation);
+  board.disableMoveInput();
+  board.enableMoveInput(inputHandler, board_orientation);
+
+  await loadPuzzleNumber(0);
+}
+
+// Generate puzzles: load from DB first, fall back to on-demand for selected game
+loadGamesButton.addEventListener('click', async function () {
+    const username = usernameTextInput.value.trim();
+    const dbPuzzles = await getUserPuzzlesFromDb(username);
+
+    if (dbPuzzles && dbPuzzles.length > 0) {
+        await setupBoard(dbPuzzles, dbPuzzles[0].orientation);
+    } else {
+        // DB not populated yet — fall back to on-demand generation
+        const selectedGame = playerGames.find((game) => game.uuid === gameSelect.value);
+        console.log("Selected Game (fallback): ", selectedGame);
+        loadPuzzles(selectedGame, username);
+    }
 })
 
 /**

@@ -7,7 +7,8 @@ require('dotenv').config();
 // Import custom
 const { getStockfishBestMove } = require('./src/engine');
 const { getTopTenPositions } = require('./src/chessdata');
-const { savePuzzlePositions, initializeDatabase } = require('./src/db');
+const { savePuzzlePositions, initializeDatabase, getUserPuzzles } = require('./src/db');
+const { buildUserBacklog } = require('./src/backgroundJobs');
 
 const app = express();
 const chessAPI = new ChessWebAPI();
@@ -188,5 +189,21 @@ app.post('/stockfish/topTenPositions/', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.toString() });
   }
+});
+
+// Trigger async backlog analysis for a user — returns immediately (202)
+app.post('/user/analyze/:username', (req, res) => {
+    buildUserBacklog(req.params.username); // fire and forget
+    res.status(202).json({ message: 'Analysis started' });
+});
+
+// Return up to 10 puzzle positions for a user, unsolved first
+app.get('/user/puzzles/:username', async (req, res) => {
+    try {
+        const puzzles = await getUserPuzzles(req.params.username);
+        res.json({ puzzles });
+    } catch (err) {
+        res.status(500).json({ error: err.toString() });
+    }
 });
 

@@ -99,4 +99,4 @@ async function savePuzzlePositions(username, gameUuid, orientation, positions) {
     }
 }
 
-module.exports = { pool, initializeDatabase, savePuzzlePositions };
+module.exports = { pool, initializeDatabase, getUserPuzzleCount, getAnalyzedGameUuids, getUserPuzzles, savePuzzlePositions };

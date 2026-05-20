@@ -287,3 +287,33 @@ export async function fillGameSelectDropdown(playerGames, gameSelectDropdownElem
         console.log("Error on fillGameSelect: ", error)
     }
 }
+/**
+ * Fire-and-forget: ask the server to start background Stockfish analysis
+ * for this user to build up the puzzle backlog in the database.
+ * Returns immediately — the server processes this asynchronously.
+ * @param  {string} username The chess.com username.
+ * @return {Promise<void>}
+ */
+export async function triggerUserAnalysis(username) {
+    try {
+        await fetch(`/user/analyze/${encodeURIComponent(username)}`, { method: 'POST' });
+    } catch (error) {
+        console.log("Error triggering user analysis:", error);
+    }
+}
+
+/**
+ * Fetch the user's puzzle positions from the database (unsolved first).
+ * @param  {string} username The chess.com username.
+ * @return {Promise<array>} Array of puzzle position objects.
+ */
+export async function getUserPuzzlesFromDb(username) {
+    try {
+        const response = await fetch(`/user/puzzles/${encodeURIComponent(username)}`);
+        const data = await response.json();
+        return data.puzzles;
+    } catch (error) {
+        console.log("Error fetching puzzles from database:", error);
+        return [];
+    }
+}
